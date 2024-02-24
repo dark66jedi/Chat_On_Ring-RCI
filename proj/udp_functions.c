@@ -1,6 +1,6 @@
 #include <unistd.h>
 #include <stdlib.h>
-#include <stdiob.h>
+#include <stdio.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -10,7 +10,7 @@
 
 #include "udp_functions.h"
 
-void UDP_Client(int port)
+void UDP_Client(char* port)
 {
     int fd, errcode;
     ssize_t n;
@@ -28,6 +28,7 @@ void UDP_Client(int port)
     // UDP socket
     // IPv4
     // UDP socket
+    
     errcode = getaddrinfo("tejo.tecnico.ulisboa.pt", port, &hints, &res);
     if (errcode != 0) /*error*/
         exit(1);
@@ -47,7 +48,7 @@ void UDP_Client(int port)
     close(fd);
 }
 
-void UDP_Server(int port)
+void UDP_Server(char* port)
 {
     int fd, errcode;
     ssize_t n;
@@ -80,7 +81,7 @@ void UDP_Server(int port)
             exit(1);
         write(1, "received: ", 10);
         write(1, buffer, n);
-        ... n = sendto(fd, buffer, n, 0,
+        n = sendto(fd, buffer, n, 0,
                        (struct sockaddr *)&addr, addrlen);
         if (n == -1) /*error*/
             exit(1);

@@ -1,9 +1,15 @@
 #include <unistd.h>
 #include <stdlib.h>
-#include <stdiob.h>
+#include <stdio.h>
 
 #include "udp_functions.h"
+#include "tcp_functions.h"
 
-void main(int argc, char *argv[] ){
+int main(int argc, char *argv[]){
+    char udp_port[5] = "58000";
 
+    printf("UDP Port: %s\n", udp_port);
+    UDP_Client(udp_port);
+
+    return 0;
 }
