@@ -9,7 +9,7 @@ int main(int argc, char *argv[]){
     char udp_port[5] = "58000";
 
     printf("UDP Port: %s\n", udp_port);
-    UDP_Client(udp_port);
+    UDP_Server(udp_port);
 
     return 0;
 }
