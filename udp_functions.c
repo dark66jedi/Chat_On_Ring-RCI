@@ -29,7 +29,7 @@ void UDP_Client(char* port, char* message)
     // IPv4
     // UDP socket
     
-    errcode = getaddrinfo("UBUNTU-DESKTOP-RGC6945", port, &hints, &res);
+    errcode = getaddrinfo("tejo.tecnico.ulisboa.pt", port, &hints, &res);
     if (errcode != 0) /*error*/
         exit(1);
 
@@ -39,8 +39,7 @@ void UDP_Client(char* port, char* message)
         exit(1);
 
     addrlen = sizeof(addr);
-    n = recvfrom(fd, buffer, 128, 0,
-                 (struct sockaddr *)&addr, &addrlen);
+    n = recvfrom(fd, buffer, 128, 0,(struct sockaddr *)&addr, &addrlen);
     if (n == -1) /*error*/
         exit(1);
     write(1, "echo: ", 6);
@@ -76,14 +75,12 @@ void UDP_Server(char* port)
     while (1)
     {
         addrlen = sizeof(addr);
-        n = recvfrom(fd, buffer, 128, 0,
-                     (struct sockaddr *)&addr, &addrlen);
+        n = recvfrom(fd, buffer, 128, 0,(struct sockaddr *)&addr, &addrlen);
         if (n == -1) /*error*/
             exit(1);
         write(1, "received: ", 10);
         write(1, buffer, n);
-        n = sendto(fd, buffer, n, 0,
-                       (struct sockaddr *)&addr, addrlen);
+        n = sendto(fd, buffer, n, 0,(struct sockaddr *)&addr, addrlen);
         if (n == -1) /*error*/
             exit(1);
     }

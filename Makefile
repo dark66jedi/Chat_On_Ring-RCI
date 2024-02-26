@@ -1,7 +1,7 @@
 CC=gcc
 #CFLAGS= -std=c99 -Wall
 
-chat: client.o udp_functions.o tcp_functions.o
+chat: client.o server.o udp_functions.o tcp_functions.o
 	$(CC) -o client client.o udp_functions.o tcp_functions.o
 	$(CC) -o server server.o udp_functions.o tcp_functions.o	
 

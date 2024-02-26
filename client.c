@@ -7,7 +7,7 @@
 #include "tcp_functions.h"
 
 int main(int argc, char *argv[]){
-    char udp_port[5] = "58000";
+    char udp_port[5] = "59000";
     char* message;
 
     message = (char*)malloc((strlen(argv[1] + 1))*sizeof(char));
