@@ -9,6 +9,23 @@
 #include <netdb.h>
 #define PORT "58001"
 
+typedef struct node
+{
+  int self;       // ID
+  char* self_IP;  // IP da máquina
+  char* self_TCP; // porto
+  int pred;
+  char* pred_IP;
+  char* pred_TCP;
+  int succ;
+  char* succ_IP;
+  char* succ_TCP;
+  int succ_two;
+  char* succ_two_IP;
+  char* succ_two_TCP;
+} node;
+
+
 void Interface()
 {
   // falta adicionar outras coisas
@@ -143,6 +160,7 @@ void join(char regIP[], char regUDP[], char ring[], char id[])
   char mensagemTCP[50];
   char answer[128];
   char connectid[3], connectIP[50], connectTCP[10];
+
   strcpy(mensagemUDP, "NODES ");
   strcat(mensagemUDP, ring);
   strcpy(answer, UDPClient(regIP, regUDP, mensagemUDP));

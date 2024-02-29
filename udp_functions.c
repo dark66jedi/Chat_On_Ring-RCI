@@ -34,7 +34,6 @@ void UDP_Client(char* port, char* message)
         exit(1);
 
     n = sendto(fd, message, strlen(message), 0, res->ai_addr, res->ai_addrlen);
-    printf("%ld\n", strlen(message));
     if (n == -1) /*error*/
         exit(1);
 
