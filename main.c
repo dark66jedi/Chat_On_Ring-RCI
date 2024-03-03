@@ -94,7 +94,6 @@ void TCPServer()
 }
 
 void TCPClient(char connectIP[], char connectTCP[], char mensagem[])
-// NOT SURE SE FUNCIONA YET porque ainda não temos nenhum nó na rede então não consigo abrir dois terminais e confirmar
 // Enviar mensagens
 {
   int fd, errcode;
@@ -129,7 +128,8 @@ void TCPClient(char connectIP[], char connectTCP[], char mensagem[])
   ptr = strcpy(buffer, mensagem);
   nbytes = strlen(buffer);
   nleft = nbytes;
-  while (nleft > 0){
+  while (nleft > 0)
+  {
     nwritten = write(fd, ptr, nleft);
     if (nwritten <= 0)
     {
@@ -139,15 +139,12 @@ void TCPClient(char connectIP[], char connectTCP[], char mensagem[])
     nleft -= nwritten;
     ptr += nwritten;
   }
-  //write(1, "echo: ", 6);
-  //write(1, buffer, n);
-  //freeaddrinfo(res); //não posso fazer já, tenho de mandar a comunicação aberta
-  //close(fd); //não posso fazer já, tenho de mandar a comunicação aberta
-  printf("oi");
+  freeaddrinfo(res); // não posso fazer já, tenho de manter a comunicação aberta
+  close(fd);         // não posso fazer já, tenho de mandter a comunicação aberta
   return;
 }
 
-// FUnção para enviar mensagens UDP
+// Função para enviar mensagens UDP
 char *UDPClient(char regIP[], char regUDP[], char mensagem[])
 {
   int fd, errcode;
@@ -193,7 +190,8 @@ void join(char regIP[], char regUDP[], char ring[], node *n)
   strcat(mensagemUDP, ring);
   strcpy(answer, UDPClient(regIP, regUDP, mensagemUDP)); // receber NODESList
   char *after = DeleteMethod(answer);
-  if (strcmp(after, "\0") == 0){ // caso em que não há ainda nós no anel
+  if (strcmp(after, "\0") == 0)
+  { // caso em que não há ainda nós no anel
     strcpy(mensagemUDP, "REG ");
     strcat(mensagemUDP, ring);
     strcat(mensagemUDP, " ");
@@ -210,7 +208,7 @@ void join(char regIP[], char regUDP[], char ring[], node *n)
     }
     impl_select(n->self_IP, n->self_TCP, regIP, regUDP, n);
   }
-  else
+  else // VAI SER PRECISO MAIS UM IF, ESTE SÓ FUNCIONA PARA 2 NÓS
   {
     // 2º nó está a entrar aqui
     /*
@@ -228,26 +226,36 @@ void join(char regIP[], char regUDP[], char ring[], node *n)
     strcat(mensagemTCP, " ");
     strcat(mensagemTCP, n->self_TCP);
     strcat(mensagemTCP, "\n");
-    printf("1");
-    TCPClient(connectIP, connectTCP, mensagemTCP); //mensagem a ser enviada está correta 
-    printf("Cheguei aqui?");
-    strcpy(connectid,n->succ);
-    strcpy(connectIP,n->succ_IP);
-    strcpy(connectTCP,n->succ_TCP);
-    printf("O meu sucessor tem id: %s, IP: %s e Porto: %s",n->succ,n->succ_IP,n->succ_TCP);
-    impl_select(n->self_IP, n->self_TCP, regIP, regUDP,n);
+    TCPClient(connectIP, connectTCP, mensagemTCP); // mensagem a ser enviada está correta
+    // sucessor
+    strcpy(n->succ, connectid);
+    strcpy(n->succ_IP, connectIP);
+    strcpy(n->succ_TCP, connectTCP);
+    // predecessor
+    strcpy(n->pred, connectid);
+    strcpy(n->pred_IP, connectIP);
+    strcpy(n->pred_TCP, connectTCP);
+    // segundo sucessor
+    strcpy(n->succ_two, n->self);
+    strcpy(n->succ_two_IP, n->self_IP);
+    strcpy(n->succ_two_TCP, n->self_TCP);
+    // registar servidor de nós
+    strcpy(mensagemUDP, "REG ");
+    strcat(mensagemUDP, ring);
+    strcat(mensagemUDP, " ");
+    strcat(mensagemUDP, n->self); // id
+    strcat(mensagemUDP, " ");
+    strcat(mensagemUDP, n->self_IP);
+    strcat(mensagemUDP, " ");
+    strcat(mensagemUDP, n->self_TCP);
+    memset(answer, '\0', sizeof(answer));
+    if (strcmp(UDPClient(regIP, regUDP, mensagemUDP), "OKREG") != 0)
+    {
+      printf("Erro no registo do nó no anel");
+      exit(1);
+    }
+    impl_select(n->self_IP, n->self_TCP, regIP, regUDP, n);
   }
-  // printf("%s", after);
-  /* tentativa de comunicação tcp, ver onde é melhor
-  strcpy(mensagemTCP,"ENTRY ");
-  strcat(mensagemTCP, connectid);
-  strcat(mensagemTCP, " ");
-  strcat(mensagemTCP, connectIP);
-  strcat(mensagemTCP, " ");
-  strcat(mensagemTCP, connectTCP);
-  strcat(mensagemTCP, "<LF>");
-  //printf("%s", mensagemTCP);
-  TCPClient(connectIP, connectTCP, mensagemTCP); */
 
   /*
   1.CONECÇÃO UDP NODES feito
@@ -258,7 +266,6 @@ void join(char regIP[], char regUDP[], char ring[], node *n)
  6. PRED
  7. reg
  8. OKAYREG
-
   */
 }
 
@@ -269,11 +276,11 @@ void impl_select(char IP[], char TCP[], char regIP[], char regUDP[], node *no)
   int maxfd, newfd, tcpfd, udpfd, errcode_udp, errcode_tcp;
   struct sockaddr addr;
   socklen_t addrlen;
-  char *ptr,buffer[128];
+  char *ptr, buffer[128];
   int counter, nread, n;
   char readInter[128];
   char protocolo[128];
-  // char modo[15], ring[4];
+  char modo[15], modo2[15];
   // int *id = 0;
 
   // socket udp (receber informação do tejo)
@@ -288,8 +295,8 @@ void impl_select(char IP[], char TCP[], char regIP[], char regUDP[], node *no)
   hints.ai_socktype = SOCK_DGRAM; // UDP socket
   hints.ai_flags = AI_PASSIVE;
 
-  if ((errcode_udp = getaddrinfo(NULL, no->self_TCP , &hints, &res)) != 0)
-  { 
+  if ((errcode_udp = getaddrinfo(NULL, no->self_TCP, &hints, &res)) != 0)
+  {
     printf("Erro getaddrinfo udp");
     exit(1);
   }
@@ -313,7 +320,7 @@ void impl_select(char IP[], char TCP[], char regIP[], char regUDP[], node *no)
   hints.ai_socktype = SOCK_STREAM; // TCP socket
   hints.ai_flags = AI_PASSIVE;
   if ((errcode_tcp = getaddrinfo(NULL, no->self_TCP, &hints, &res)) != 0)
-  { 
+  {
     printf("Erro getaddrinfo tcp");
     exit(1);
   }
@@ -345,7 +352,30 @@ void impl_select(char IP[], char TCP[], char regIP[], char regUDP[], node *no)
     if (FD_ISSET(0, &rfds))
     {
       // coisas no terminal
-      printf("Entrámos aqui? Okay se fiz printf"); 
+      fgets(readInter, sizeof(readInter), stdin);
+      sscanf(readInter, "%s", modo);
+      if ((strcmp(modo, "show") == 0) || (strcmp(modo, "st") == 0))
+      {
+        sscanf(readInter, "%s %s", modo, modo2);
+        if ((strcmp(modo, "topology") == 0) || (strcmp(modo, "st") == 0)){          
+          printf("Estado do protocolo topológico:\n");
+          printf("Próprio anel:\n");
+          printf("\u2022 id: %s \n",no->self);
+          printf("\u2022 IP: %s \n",no->self_IP);
+          printf("\u2022 Porto: %s \n\n",no->self_TCP);
+
+          printf("Seu sucessor:\n");
+          printf("\u2022 id: %s \n",no->succ);
+          printf("\u2022 IP: %s \n",no->succ_IP);
+          printf("\u2022 Porto: %s \n\n",no->succ_TCP);
+
+          printf("Seu segundo-sucessor:\n");
+          printf("\u2022 id: %s \n",no->succ_two);
+          printf("\u2022 IP: %s \n",no->succ_two_IP);
+          printf("\u2022 Porto: %s \n\n",no->succ_two_TCP);
+        }
+      }
+      // printf("Entrámos aqui? Okay se fiz printf");
       // addrlen=sizeof(addr);
       // memset(readInter,'\0',128); //memset(void *str, int c, size_t n) copies the character c to the first n characters of the string pointed to, by the argument str.
       if (fgets(readInter, sizeof(readInter), stdin) == NULL)
@@ -359,32 +389,40 @@ void impl_select(char IP[], char TCP[], char regIP[], char regUDP[], node *no)
         //join(regIP, regUDP, ring, n);
       }*/
     }
-    if (FD_ISSET(tcpfd, &rfds)){
+    if (FD_ISSET(tcpfd, &rfds))
+    {
       // comunicação de outros nós
       addrlen = sizeof(addr);
-      if ((newfd = accept(tcpfd, &addr, &addrlen)) == -1){
+      if ((newfd = accept(tcpfd, &addr, &addrlen)) == -1)
+      {
         printf("Erro no accept");
         exit(1);
       }
       while ((n = read(newfd, buffer, 128)) != 0)
       {
-        if (n == -1){
+        if (n == -1)
+        {
           printf("Erro no n");
-        exit(1);
+          exit(1);
         }
         ptr = &buffer[0];
-        sscanf(buffer,"%s", protocolo);
-        if(strcmp(protocolo,"ENTRY")==0){ //APENAS A FUNCIONAR PARA 2 NÓS: não faz a coisa de ir avisar o seu sucesor nem pred nem nada
-          sscanf(buffer,"%s %s %s %s", protocolo,no->pred, no->pred_IP, no->pred_TCP);
-          printf("O meu predecessor tem id: %s, IP: %s e Porto: %s",no->pred,no->pred_IP,no->pred_TCP);
+        sscanf(buffer, "%s", protocolo);
+        if (strcmp(protocolo, "ENTRY") == 0)
+        { // APENAS A FUNCIONAR PARA 2 NÓS: não faz a coisa de ir avisar o seu sucesor nem pred nem nada
+          sscanf(buffer, "%s %s %s %s", protocolo, no->pred, no->pred_IP, no->pred_TCP);
+          sscanf(buffer, "%s %s %s %s", protocolo, no->succ, no->succ_IP, no->succ_TCP);
+          strcpy(no->succ_two, no->self);
+          strcpy(no->succ_two_IP, no->self_IP);
+          strcpy(no->succ_two_TCP, no->self_TCP);
         }
       }
       close(newfd);
       close(tcpfd);
     }
-    if (FD_ISSET(udpfd, &rfds)){ // confirmar se faz sentido, porque em principio, o tejo nunca fala connpscp sem que nós perguntemos algo
+    if (FD_ISSET(udpfd, &rfds))
+    { // confirmar se faz sentido, porque em principio, o tejo nunca fala connpscp sem que nós perguntemos algo
       // comunicação do servidor
-      printf("Funcionalidade por desenvolver: UDP");
+      //printf("Funcionalidade por desenvolver: UDP");
       addrlen = sizeof(addr);
       memset(buffer, '\0', 128);
       if ((nread = recvfrom(udpfd, buffer, 128, 0, &addr, &addrlen)) == -1)
@@ -405,7 +443,7 @@ int main(int argc, char *argv[])
   char regIP[50], regUDP[50];
   char readInter[128];
   node *n;
-  char modo[15], ring[4];
+  char modo[15], modo2[15], ring[4];
   char id[3];
 
   if (argc == 5 || argc == 3)
