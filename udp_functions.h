@@ -1,7 +1,7 @@
 #ifndef _UDP_H
 #define _UDP_H
 
-void UDP_Client(char* port, char* message);
+char* UDP_Client(char* IP, char* port, char* message);
 void UDP_Server(char* port);
 
 #endif
