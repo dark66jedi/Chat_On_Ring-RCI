@@ -9,8 +9,9 @@
 #include <string.h>
 
 #include "udp_functions.h"
+#include "global_variables.h"
 
-void UDP_Client(char* port, char* message)
+char* UDP_Client(char* IP, char* port, char* message)
 {
     int fd, errcode;
     ssize_t n;
@@ -29,7 +30,7 @@ void UDP_Client(char* port, char* message)
     // IPv4
     // UDP socket
     
-    errcode = getaddrinfo("tejo.tecnico.ulisboa.pt", port, &hints, &res);
+    errcode = getaddrinfo(IP, port, &hints, &res);
     if (errcode != 0) /*error*/
         exit(1);
 
@@ -45,6 +46,8 @@ void UDP_Client(char* port, char* message)
     write(1, buffer, n);
     freeaddrinfo(res);
     close(fd);
+
+    return buffer;
 }
 
 void UDP_Server(char* port)
