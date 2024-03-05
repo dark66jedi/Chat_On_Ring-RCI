@@ -3,23 +3,27 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "global_variables.h"
 #include "protocol_msgs.h"
 #include "udp_functions.h"
 
-
-// extern char *regIP;
-// extern char *regUDP;
-
-char* NODES(char ring[])
+void NODES(char ring[], char answer[])
 {
-    // char msg_to_send[50] = "NODES ";
+    char msg_to_send[50] = "NODES ";
 
-    // strcat(msg_to_send, ring);
-    // return UDP_Client(regIP, regUDP, msg_to_send);
+    strcat(msg_to_send, ring);
+    strcpy(answer, UDP_Client(regIP, regUDP, msg_to_send));
+}
 
-    printf("=====================\n");
-    printf("regIP: %s\n", regIP);
-    printf("regUDP: %s\n", regUDP);
-    printf("ring: %s\n", ring);
+void REG(char ring[], char answer[], node *node)
+{
+    char msg_to_send[50] = "REG ";
+
+    strcat(msg_to_send, ring);
+    strcat(msg_to_send, " ");
+    strcat(msg_to_send, node->self); // id
+    strcat(msg_to_send, " ");
+    strcat(msg_to_send, node->self_IP);
+    strcat(msg_to_send, " ");
+    strcat(msg_to_send, node->self_TCP);
+    strcpy(answer, UDP_Client(regIP, regUDP, msg_to_send));
 }

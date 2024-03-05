@@ -1,56 +1,39 @@
-#include <unistd.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <netdb.h>
-#include <string.h>
-
 #include "udp_functions.h"
-#include "global_variables.h"
 
-char* UDP_Client(char* IP, char* port, char* message)
+char *UDP_Client(char regIP[], char regUDP[], char mensagem[])
 {
     int fd, errcode;
     ssize_t n;
     socklen_t addrlen;
     struct addrinfo hints, *res;
     struct sockaddr_in addr;
-    char buffer[128];
+    static char buffer[128];
 
-    fd = socket(AF_INET, SOCK_DGRAM, 0);
-    if (fd == -1) /*error*/
+    fd = socket(AF_INET, SOCK_DGRAM, 0); // UDP socket
+    if (fd == -1)                        /*error*/
         exit(1);
+
     memset(&hints, 0, sizeof hints);
-    hints.ai_family = AF_INET;
-    hints.ai_socktype = SOCK_DGRAM;
-    // UDP socket
-    // IPv4
-    // UDP socket
-    
-    errcode = getaddrinfo(IP, port, &hints, &res);
+    hints.ai_family = AF_INET;      // IPv4
+    hints.ai_socktype = SOCK_DGRAM; // UDP socket
+    errcode = getaddrinfo(regIP, regUDP, &hints, &res);
+    memset(buffer, '\0', 128);
     if (errcode != 0) /*error*/
         exit(1);
-
-    n = sendto(fd, message, strlen(message), 0, res->ai_addr, res->ai_addrlen);
+    n = sendto(fd, mensagem, strlen(mensagem), 0, res->ai_addr, res->ai_addrlen);
     if (n == -1) /*error*/
         exit(1);
-
     addrlen = sizeof(addr);
-    n = recvfrom(fd, buffer, 128, 0,(struct sockaddr *)&addr, &addrlen);
+    n = recvfrom(fd, buffer, 128, 0, (struct sockaddr *)&addr, &addrlen);
     if (n == -1) /*error*/
         exit(1);
-    write(1, "echo: ", 6);
-    write(1, buffer, n);
+    // write(1, buffer, n);
     freeaddrinfo(res);
     close(fd);
-
     return buffer;
 }
 
-void UDP_Server(char* port)
+void UDP_Server(char *port)
 {
     int fd, errcode;
     ssize_t n;
@@ -77,12 +60,12 @@ void UDP_Server(char* port)
     while (1)
     {
         addrlen = sizeof(addr);
-        n = recvfrom(fd, buffer, 128, 0,(struct sockaddr *)&addr, &addrlen);
+        n = recvfrom(fd, buffer, 128, 0, (struct sockaddr *)&addr, &addrlen);
         if (n == -1) /*error*/
             exit(1);
         write(1, "received: ", 10);
         write(1, buffer, n);
-        n = sendto(fd, buffer, n, 0,(struct sockaddr *)&addr, addrlen);
+        n = sendto(fd, buffer, n, 0, (struct sockaddr *)&addr, addrlen);
         if (n == -1) /*error*/
             exit(1);
     }
