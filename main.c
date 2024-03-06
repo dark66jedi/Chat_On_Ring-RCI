@@ -13,8 +13,8 @@
 #include "tcp_functions.h"
 #include "protocol_msgs.h"
 #include "global_variables.h"
-#include "user_cmds.h"
 #include "aux_functions.h"
+#include "select.h"
 
 char regIP[30];
 char regUDP[10];
@@ -27,9 +27,6 @@ int main(int argc, char *argv[])
 
   char readInter[128];
   node *n = malloc(sizeof(node));
-  char modo[15];
-  char ring[4];
-  char id[3];
 
   if (argc == 5 || argc == 3)
   {
@@ -39,7 +36,6 @@ int main(int argc, char *argv[])
       strcpy(TCP, argv[2]);
       strcpy(regIP, argv[3]);
       strcpy(regUDP, argv[4]);
-      printf("%s %s", IP, TCP);
     }
     else
     {
@@ -47,26 +43,12 @@ int main(int argc, char *argv[])
       strcpy(TCP, argv[2]);
       strcpy(regIP, "193.136.138.142");
       strcpy(regUDP, "59000");
-      printf("%s %s", IP, TCP);
     }
-    Interface();
-    printf("Choose the mode\n");
-    //scanf("%s %s %s", modo, ring, id);
-    fgets(readInter, sizeof(readInter), stdin);
-    sscanf(readInter, "%s", modo);
-    //printf("%s",modo);
-    //retirei o if e já não deu segmentation fault portanto não é antes disto
-    //printf("%s(%d)\n", modo, strlen(modo));
-    if (strcmp(modo, "join") == 0 || strcmp(modo, "j") == 0)
-    {
-      //printf("entrei if");
-      sscanf(readInter, "%s %s %s", modo, ring, id);
-      strcpy(n->self, id);
-      //printf("%s",n->self);
-      strcpy(n->self_IP, IP);
-      strcpy(n->self_TCP, TCP);
-      join(ring, n);
-    }
+
+    n->chord_bool = 0;
+    n->ring_bool = 0;
+  
+    impl_select(n->self_IP, n->self_TCP, regIP, regUDP, n);
   }
   else
   {

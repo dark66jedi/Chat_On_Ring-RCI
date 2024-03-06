@@ -3,7 +3,7 @@
 #ifndef _FILE_YET_TO_RENAME_H
 #define _FILE_YET_TO_RENAME_H
 
-void Interface();
+void Interface(node *node);
 char *DeleteMethod(char *string);
 
 #endif

@@ -1,18 +1,17 @@
-#include "select.h" 
+#include "select.h"
+#include "user_cmds.h"
 
-void impl_select(char IP[], char TCP[], char regIP[], char regUDP[], node *no)
+void impl_select(char IP[], char TCP[], char regIP[], char regUDP[], node *node)
 {
   fd_set rfds;
   struct addrinfo hints, *res;
   int maxfd, newfd, tcpfd, udpfd, errcode_udp, errcode_tcp;
   struct sockaddr addr;
   socklen_t addrlen;
-  //char *ptr;
-  char buffer[128];
+  // char *ptr;
   int counter, nread, n;
-  char readInter[128];
-  char protocolo[128];
-  char modo[15], modo2[15];
+  char buffer[128];
+
   // int *id = 0;
 
   // socket udp (receber informação do tejo)
@@ -27,7 +26,7 @@ void impl_select(char IP[], char TCP[], char regIP[], char regUDP[], node *no)
   hints.ai_socktype = SOCK_DGRAM; // UDP socket
   hints.ai_flags = AI_PASSIVE;
 
-  if ((errcode_udp = getaddrinfo(NULL, no->self_TCP, &hints, &res)) != 0)
+  if ((errcode_udp = getaddrinfo(NULL, node->self_TCP, &hints, &res)) != 0)
   {
     printf("Erro getaddrinfo udp");
     exit(1);
@@ -51,7 +50,7 @@ void impl_select(char IP[], char TCP[], char regIP[], char regUDP[], node *no)
   hints.ai_family = AF_INET;       // IPv4
   hints.ai_socktype = SOCK_STREAM; // TCP socket
   hints.ai_flags = AI_PASSIVE;
-  if ((errcode_tcp = getaddrinfo(NULL, no->self_TCP, &hints, &res)) != 0)
+  if ((errcode_tcp = getaddrinfo(NULL, node->self_TCP, &hints, &res)) != 0)
   {
     printf("Erro getaddrinfo tcp");
     exit(1);
@@ -76,7 +75,12 @@ void impl_select(char IP[], char TCP[], char regIP[], char regUDP[], node *no)
     FD_SET(0, &rfds);
     FD_SET(tcpfd, &rfds);
     FD_SET(udpfd, &rfds);
+
+    // Show Interface for each command
+    Interface(node);
+
     counter = select(maxfd + 1, &rfds, (fd_set *)NULL, (fd_set *)NULL, (struct timeval *)NULL);
+
     // The select function returns the number of file descriptors (the number of bits from readfds, writefds, and errorfds).
     if (counter == 0)
     { // caso não se leia nada-> leave?
@@ -84,28 +88,7 @@ void impl_select(char IP[], char TCP[], char regIP[], char regUDP[], node *no)
     if (FD_ISSET(0, &rfds))
     {
       // coisas no terminal
-      fgets(readInter, sizeof(readInter), stdin);
-      sscanf(readInter, "%s", modo);
-      if ((strcmp(modo, "show") == 0) || (strcmp(modo, "st") == 0))
-      {
-        sscanf(readInter, "%s %s", modo, modo2);
-        if ((strcmp(modo, "topology") == 0) || (strcmp(modo, "st") == 0)){          
-          show_topology(no, 0);
-        }
-      }
-      // printf("Entrámos aqui? Okay se fiz printf");
-      // addrlen=sizeof(addr);
-      // memset(readInter,'\0',128); //memset(void *str, int c, size_t n) copies the character c to the first n characters of the string pointed to, by the argument str.
-      if (fgets(readInter, sizeof(readInter), stdin) == NULL)
-      {
-        exit(0);
-      };
-      // sscanf(readInter, "%s", modo);
-      /*if(strcmp(modo,"join")==0 || strcmp(modo,"j")==0){
-        printf("Entrámso aqui?");
-        sscanf(readInter, "%s %s %d", modo, ring, id);
-        //join(regIP, regUDP, ring, n);
-      }*/
+      choose_terminal_cmd(node);
     }
     if (FD_ISSET(tcpfd, &rfds))
     {
@@ -123,16 +106,8 @@ void impl_select(char IP[], char TCP[], char regIP[], char regUDP[], node *no)
           printf("Erro no n");
           exit(1);
         }
-        //ptr = &buffer[0];
-        sscanf(buffer, "%s", protocolo);
-        if (strcmp(protocolo, "ENTRY") == 0)
-        { // APENAS A FUNCIONAR PARA 2 NÓS: não faz a coisa de ir avisar o seu sucesor nem pred nem nada
-          sscanf(buffer, "%s %s %s %s", protocolo, no->pred, no->pred_IP, no->pred_TCP);
-          sscanf(buffer, "%s %s %s %s", protocolo, no->succ, no->succ_IP, no->succ_TCP);
-          strcpy(no->succ_two, no->self);
-          strcpy(no->succ_two_IP, no->self_IP);
-          strcpy(no->succ_two_TCP, no->self_TCP);
-        }
+        // identificar o protocolo recebido
+        choose_received_protocol(node, buffer);
       }
       close(newfd);
       close(tcpfd);
@@ -140,7 +115,7 @@ void impl_select(char IP[], char TCP[], char regIP[], char regUDP[], node *no)
     if (FD_ISSET(udpfd, &rfds))
     { // confirmar se faz sentido, porque em principio, o tejo nunca fala connosco sem que nós perguntemos algo
       // comunicação do servidor
-      //printf("Funcionalidade por desenvolver: UDP");
+      // printf("Funcionalidade por desenvolver: UDP");
       addrlen = sizeof(addr);
       memset(buffer, '\0', 128);
       if ((nread = recvfrom(udpfd, buffer, 128, 0, &addr, &addrlen)) == -1)
@@ -151,5 +126,194 @@ void impl_select(char IP[], char TCP[], char regIP[], char regUDP[], node *no)
       // aqui, depois, acho que só precisamos de fazer algo se a responder for o NODESLIST
       // no OFREG e o OKUNREG acho que não se faz nada.
     }
+  }
+}
+
+void choose_terminal_cmd(node *node)
+{
+  char readInter[128];
+  char modo[15], modo2[15];
+  char ring[4];
+  char id[3], dest[3];
+  char succid[3], succIP[30], succTCP[10];
+  char message[129];
+
+  if (fgets(readInter, sizeof(readInter), stdin) == NULL)
+  {
+    exit(0);
+  };
+  sscanf(readInter, "%s", modo);
+
+  // Comando join
+  if (strcmp(modo, "join") == 0 || strcmp(modo, "j") == 0)
+  {
+    if (node->ring_bool == 1)
+    {
+      printf("\n=== Nó já pertence a um anel! ===\n");
+      return;
+    }
+    sscanf(readInter, "%s %s %s", modo, ring, id);
+    strcpy(node->self, id);
+    strcpy(node->self_IP, IP);
+    strcpy(node->self_TCP, TCP);
+    join(ring, node);
+  }
+
+  // Comando direct join
+  else if (strcmp(modo, "direct") == 0 || strcmp(modo, "dj") == 0)
+  {
+    sscanf(readInter, "%s %s %s %s %s %s", modo, modo2, id, succid, succIP, succTCP);
+    if ((strcmp(modo2, "join") == 0) || (strcmp(modo, "dj") == 0))
+    {
+      if (node->ring_bool == 1)
+      {
+        printf("\n=== Nó já pertence a um anel! ===\n");
+        return;
+      }
+      // direct_join();
+    }
+    else
+    {
+      printf("\n=== Comando não reconhecido! ===\n");
+      return;
+    }
+  }
+
+  // Comando chord
+  else if (strcmp(modo, "chord") == 0 || strcmp(modo, "c") == 0)
+  {
+    if (node->chord_bool == 1)
+    {
+      printf("\n=== Nó já tem uma corda! ===\n");
+      return;
+    }
+    // chord();
+  }
+
+  // Comando remove chord
+  else if ((strcmp(modo, "remove") == 0) || (strcmp(modo, "rc") == 0))
+  {
+    sscanf(readInter, "%s %s", modo, modo2);
+    if ((strcmp(modo2, "chord") == 0) || (strcmp(modo, "rc") == 0))
+    {
+      if (node->chord_bool == 0)
+      {
+        printf("\n=== Nó não tem uma corda! ===\n");
+        return;
+      }
+      // remove_chord();
+    }
+    else
+    {
+      printf("\n=== Comando não reconhecido! ===\n");
+      return;
+    }
+  }
+
+  // Comando show topology
+  else if ((strcmp(modo, "show") == 0) || (strcmp(modo, "st") == 0))
+  {
+    sscanf(readInter, "%s %s", modo, modo2);
+    if ((strcmp(modo2, "topology") == 0) || (strcmp(modo, "st") == 0))
+    {
+      show_topology(node, 0);
+    }
+    else
+    {
+      printf("\n=== Comando não reconhecido! ===\n");
+      return;
+    }
+  }
+
+  // Comando show routing
+  else if ((strcmp(modo, "show") == 0) || (strcmp(modo, "sr") == 0))
+  {
+    sscanf(readInter, "%s %s %s", modo, modo2, dest);
+    if ((strcmp(modo2, "routing") == 0) || (strcmp(modo, "sr") == 0))
+    {
+      // show_routing();
+    }
+    else
+    {
+      printf("\n=== Comando não reconhecido! ===\n");
+      return;
+    }
+  }
+
+  // Comando show path
+  else if ((strcmp(modo, "show") == 0) || (strcmp(modo, "sp") == 0))
+  {
+    sscanf(readInter, "%s %s %s", modo, modo2, dest);
+    if ((strcmp(modo2, "path") == 0) || (strcmp(modo, "sp") == 0))
+    {
+      // show_path();
+    }
+    else
+    {
+      printf("\n=== Comando não reconhecido! ===\n");
+      return;
+    }
+  }
+
+  // Comando show forwarding
+  else if ((strcmp(modo, "show") == 0) || (strcmp(modo, "sf") == 0))
+  {
+    sscanf(readInter, "%s %s", modo, modo2);
+    if ((strcmp(modo2, "forwarding") == 0) || (strcmp(modo, "sf") == 0))
+    {
+      show_topology(node, 0);
+    }
+    else
+    {
+      printf("\n=== Comando não reconhecido! ===\n");
+      return;
+    }
+  }
+
+  // Comando message
+  else if (strcmp(modo, "message") == 0 || strcmp(modo, "m") == 0)
+  {
+    if (node->ring_bool == 0)
+    {
+      printf("\n=== Nó não pertence a um anel! ===\n");
+      return;
+    }
+    sscanf(readInter, "%s %s %s", modo, dest, message);
+    // message();
+  }
+
+  // Comando leave
+  else if (strcmp(modo, "leave") == 0 || strcmp(modo, "l") == 0)
+  {
+    if (node->ring_bool == 0)
+    {
+      printf("\n=== Nó não pertence a um anel! ===\n");
+      return;
+    }
+    // leave();
+  }
+
+  // Comando exit
+  else if (strcmp(modo, "exit") == 0 || strcmp(modo, "x") == 0)
+  {
+    // exit_COR();
+  }
+
+  else
+  {
+    printf("\n=== Comando não reconhecido! ===\n");
+    return;
+  }
+}
+
+void choose_received_protocol(node *node, char buffer[])
+{
+  char protocol[128];
+
+  sscanf(buffer, "%s", protocol);
+  if (strcmp(protocol, "ENTRY") == 0)
+  {
+    receive_ENTRY();
+    // sscanf(buffer, "%s %s %s %s", protocol, node->pred, node->pred_IP, node->pred_TCP);
   }
 }

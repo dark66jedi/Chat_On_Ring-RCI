@@ -20,7 +20,6 @@ void join(char ring[], node *n)
             printf("Erro no registo do nó no anel");
             exit(1);
         }
-        impl_select(n->self_IP, n->self_TCP, regIP, regUDP, n);
     }
     else // VAI SER PRECISO MAIS UM IF, ESTE SÓ FUNCIONA PARA 2 NÓS
     {
@@ -42,16 +41,8 @@ void join(char ring[], node *n)
                 sprintf(n->self, "0%d", new);
             }
         }
-        // printf("%s", n->self);
-        strcpy(mensagemTCP, "ENTRY ");
-        strcat(mensagemTCP, n->self);
-        strcat(mensagemTCP, " ");
-        strcat(mensagemTCP, n->self_IP);
-        strcat(mensagemTCP, " ");
-        strcat(mensagemTCP, n->self_TCP);
-        strcat(mensagemTCP, "\n");
-        // printf("%s", mensagemTCP);
-        TCP_Client(connectIP, connectTCP, mensagemTCP); // mensagem a ser enviada está correta
+        // ENTRY
+        ENTRY(connectIP, connectTCP, n);
         // sucessor
         strcpy(n->succ, connectid);
         strcpy(n->succ_IP, connectIP);
@@ -71,7 +62,6 @@ void join(char ring[], node *n)
             printf("Erro no registo do nó no anel");
             exit(1);
         }
-        // impl_select(n->self_IP, n->self_TCP, regIP, regUDP, n);
     }
 
     /*

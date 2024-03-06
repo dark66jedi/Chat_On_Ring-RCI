@@ -39,6 +39,12 @@ typedef struct node
   char succ_two[3];
   char succ_two_IP[50];
   char succ_two_TCP[10];
+  int ring_bool;
+  int chord_bool;
+  char routing_table[16][16][50];   // tabela de encaminhamento do próprio nó
+  char short_paths_table[16][50];   // tabela de caminhos mais curtos do próprio nó
+  char expedition_table[16][3];     // tabela de expedição do próprio nó
+  int table_indexes[16];       // vetor que identifica o indice atribuido a cada id de um nó (ex.: o id do nó pode ser 50 mas o indice é 2)
 } node;
 
 // EXTERN node self_node;
