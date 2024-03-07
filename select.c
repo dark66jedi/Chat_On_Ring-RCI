@@ -5,7 +5,8 @@ void impl_select(node *node)
 {
   fd_set rfds;
   struct addrinfo hints, *res;
-  int maxfd, newfd, tcpfd, udpfd, errcode_udp, errcode_tcp;
+  int maxfd = 0, newfd;
+  int errcode_listen_tdp, errcode_pred_tcp, errcode_succ_tcp, errcode_chord_tcp;
   struct sockaddr addr;
   socklen_t addrlen;
   // char *ptr;
@@ -14,33 +15,10 @@ void impl_select(node *node)
 
   // int *id = 0;
 
-  // socket udp (receber informação do tejo)
-  udpfd = socket(AF_INET, SOCK_DGRAM, 0);
-  if (udpfd == -1)
-  {
-    printf("Erro na criação da socket udp");
+  /* socket de escuta tcp (receber informação de nós fora do ring)*/
+  if ((node->listen_fd = socket(AF_INET, SOCK_STREAM, 0)) == -1)
     exit(1);
-  }
-  memset(&hints, 0, sizeof hints);
-  hints.ai_family = AF_INET;      // IPv4
-  hints.ai_socktype = SOCK_DGRAM; // UDP socket
-  hints.ai_flags = AI_PASSIVE;
-
-  if ((errcode_udp = getaddrinfo(IP_global, TCP_global, &hints, &res)) != 0)
-  {
-    printf("Erro getaddrinfo udp");
-    exit(1);
-  }
-  if (bind(udpfd, res->ai_addr, res->ai_addrlen) == -1)
-  {
-    printf("Erro bind udp");
-    exit(1);
-  }
-
-  // socket tcp (receber informação de outros nós)
-  if ((tcpfd = socket(AF_INET, SOCK_STREAM, 0)) == -1)
-    exit(1);
-  if (tcpfd == -1)
+  if (node->listen_fd == -1)
   {
     printf("Erro na criação da socket tcp");
     exit(1);
@@ -50,31 +28,133 @@ void impl_select(node *node)
   hints.ai_family = AF_INET;       // IPv4
   hints.ai_socktype = SOCK_STREAM; // TCP socket
   hints.ai_flags = AI_PASSIVE;
-  if ((errcode_tcp = getaddrinfo(IP_global, TCP_global, &hints, &res)) != 0)
+  if ((errcode_listen_tdp = getaddrinfo(IP_global, TCP_global, &hints, &res)) != 0)
   {
     printf("Erro getaddrinfo tcp");
     exit(1);
   }
 
-  if (bind(tcpfd, res->ai_addr, res->ai_addrlen) == -1)
+  if (bind(node->listen_fd, res->ai_addr, res->ai_addrlen) == -1)
   {
     printf("Erro bind tcp");
     exit(1);
   }
 
-  if (listen(tcpfd, 5) == -1)
+  if (listen(node->listen_fd, 5) == -1)
   {
     printf("Erro listen tcp");
     exit(1);
   }
+  maxfd++;
+  /********************************************************************/
 
-  maxfd = max(tcpfd, udpfd); // se depois tivermos mais, atualizar
+  /* socket de escuta do pred tcp (receber informação do nós predecedor)*/
+  if ((node->pred_fd = socket(AF_INET, SOCK_STREAM, 0)) == -1)
+    exit(1);
+  if (node->pred_fd == -1)
+  {
+    printf("Erro na criação da socket tcp");
+    exit(1);
+  }
+
+  memset(&hints, 0, sizeof hints);
+  hints.ai_family = AF_INET;       // IPv4
+  hints.ai_socktype = SOCK_STREAM; // TCP socket
+  hints.ai_flags = AI_PASSIVE;
+  if ((errcode_pred_tcp = getaddrinfo(IP_global, TCP_global, &hints, &res)) != 0)
+  {
+    printf("Erro getaddrinfo tcp");
+    exit(1);
+  }
+
+  if (bind(node->pred_fd, res->ai_addr, res->ai_addrlen) == -1)
+  {
+    printf("Erro bind tcp");
+    exit(1);
+  }
+
+  if (listen(node->pred_fd, 1) == -1)
+  {
+    printf("Erro listen pred tcp");
+    exit(1);
+  }
+  maxfd++;
+  /********************************************************************/
+
+  /* socket de escuta do succ tcp (receber informação do nó sucessor)*/
+  if ((node->succ_fd = socket(AF_INET, SOCK_STREAM, 0)) == -1)
+    exit(1);
+  if (node->succ_fd == -1)
+  {
+    printf("Erro na criação da socket tcp");
+    exit(1);
+  }
+
+  memset(&hints, 0, sizeof hints);
+  hints.ai_family = AF_INET;       // IPv4
+  hints.ai_socktype = SOCK_STREAM; // TCP socket
+  hints.ai_flags = AI_PASSIVE;
+  if ((errcode_succ_tcp = getaddrinfo(IP_global, TCP_global, &hints, &res)) != 0)
+  {
+    printf("Erro getaddrinfo tcp");
+    exit(1);
+  }
+
+  if (bind(node->succ_fd, res->ai_addr, res->ai_addrlen) == -1)
+  {
+    printf("Erro bind tcp");
+    exit(1);
+  }
+
+  if (listen(node->succ_fd, 1) == -1)
+  {
+    printf("Erro listen pred tcp");
+    exit(1);
+  }
+  maxfd++;
+  /********************************************************************/
+
+  /* socket de escuta do chord tcp (receber informação do nó com quem estabelecermos a corda)*/
+  if ((node->chord_fd = socket(AF_INET, SOCK_STREAM, 0)) == -1)
+    exit(1);
+  if (node->chord_fd == -1)
+  {
+    printf("Erro na criação da socket tcp");
+    exit(1);
+  }
+
+  memset(&hints, 0, sizeof hints);
+  hints.ai_family = AF_INET;       // IPv4
+  hints.ai_socktype = SOCK_STREAM; // TCP socket
+  hints.ai_flags = AI_PASSIVE;
+  if ((errcode_chord_tcp = getaddrinfo(IP_global, TCP_global, &hints, &res)) != 0)
+  {
+    printf("Erro getaddrinfo tcp");
+    exit(1);
+  }
+
+  if (bind(node->chord_fd, res->ai_addr, res->ai_addrlen) == -1)
+  {
+    printf("Erro bind tcp");
+    exit(1);
+  }
+
+  if (listen(node->chord_fd, 1) == -1)
+  {
+    printf("Erro listen pred tcp");
+    exit(1);
+  }
+  maxfd++;
+  /********************************************************************/
+
   while (1)
   { // ACTUALLY select
     FD_ZERO(&rfds);
     FD_SET(0, &rfds);
-    FD_SET(tcpfd, &rfds);
-    FD_SET(udpfd, &rfds);
+    FD_SET(node->listen_fd, &rfds);
+    FD_SET(node->pred_fd, &rfds);
+    FD_SET(node->succ_fd, &rfds);
+    FD_SET(node->chord_fd, &rfds);
 
     // Show Interface for each command
     Interface(node);
@@ -85,18 +165,23 @@ void impl_select(node *node)
     if (counter == 0)
     { // caso não se leia nada-> leave?
     }
+
+    /* fd responsável pelo terminal****************************************/
     if (FD_ISSET(0, &rfds))
     {
       // coisas no terminal
       FD_CLR(0,&rfds);
       choose_terminal_cmd(node);
     }
-    if (FD_ISSET(tcpfd, &rfds))
+    /**********************************************************************/
+
+    /* fd responsável pelo canal de escuta ********************************/
+    if (FD_ISSET(node->listen_fd, &rfds))
     {
       // comunicação de outros nós
-      FD_CLR(tcpfd,&rfds);
+      FD_CLR(node->listen_fd,&rfds);
       addrlen = sizeof(addr);
-      if ((newfd = accept(tcpfd, &addr, &addrlen)) == -1)
+      if ((newfd = accept(node->listen_fd, &addr, &addrlen)) == -1)
       {
         printf("Erro no accept");
         exit(1);
@@ -112,23 +197,84 @@ void impl_select(node *node)
         choose_received_protocol(node, buffer);
       }
       close(newfd);
-      close(tcpfd);
+      close(node->listen_fd);
     }
-    if (FD_ISSET(udpfd, &rfds))
-    { // confirmar se faz sentido, porque em principio, o tejo nunca fala connosco sem que nós perguntemos algo
-      // comunicação do servidor
-      // printf("Funcionalidade por desenvolver: UDP");
-      FD_CLR(udpfd,&rfds);
+    /**********************************************************************/
+
+    /* fd responsável pelo canal do predecessor ***************************/
+    if (FD_ISSET(node->pred_fd, &rfds))
+    {
+      // comunicação de outros nós
+      FD_CLR(node->pred_fd,&rfds);
       addrlen = sizeof(addr);
-      memset(buffer, '\0', 128);
-      if ((nread = recvfrom(udpfd, buffer, 128, 0, &addr, &addrlen)) == -1)
-      { // Fazer algo com o buffer, mas não preciso de fazer o sendto que está nos slides, se não me engano
-        printf("Erro na leitura UDP");
+      if ((newfd = accept(node->pred_fd, &addr, &addrlen)) == -1)
+      {
+        printf("Erro no accept");
         exit(1);
       }
-      // aqui, depois, acho que só precisamos de fazer algo se a responder for o NODESLIST
-      // no OFREG e o OKUNREG acho que não se faz nada.
+      while ((n = read(newfd, buffer, 128)) != 0)
+      {
+        if (n == -1)
+        {
+          printf("Erro no n");
+          exit(1);
+        }
+        // identificar o protocolo recebido
+        choose_received_protocol(node, buffer);
+      }
+      close(newfd);
     }
+    /**********************************************************************/
+
+    /* fd responsável pelo canal do sucessor ******************************/
+    if (FD_ISSET(node->succ_fd, &rfds))
+    {
+      // comunicação de outros nós
+      FD_CLR(node->succ_fd,&rfds);
+      addrlen = sizeof(addr);
+      if ((newfd = accept(node->succ_fd, &addr, &addrlen)) == -1)
+      {
+        printf("Erro no accept");
+        exit(1);
+      }
+      while ((n = read(newfd, buffer, 128)) != 0)
+      {
+        if (n == -1)
+        {
+          printf("Erro no n");
+          exit(1);
+        }
+        // identificar o protocolo recebido
+        choose_received_protocol(node, buffer);
+      }
+      close(newfd);
+    }
+    /**********************************************************************/
+
+    /* fd responsável pelo canal da corda *********************************/
+    if (FD_ISSET(node->chord_fd, &rfds))
+    {
+      // comunicação de outros nós
+      FD_CLR(node->chord_fd,&rfds);
+      addrlen = sizeof(addr);
+      if ((newfd = accept(node->chord_fd, &addr, &addrlen)) == -1)
+      {
+        printf("Erro no accept");
+        exit(1);
+      }
+      while ((n = read(newfd, buffer, 128)) != 0)
+      {
+        if (n == -1)
+        {
+          printf("Erro no n");
+          exit(1);
+        }
+        // identificar o protocolo recebido
+        choose_received_protocol(node, buffer);
+      }
+      close(newfd);
+    }
+    /**********************************************************************/
   }
 }
 

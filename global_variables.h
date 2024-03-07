@@ -39,8 +39,19 @@ typedef struct node
   char succ_two[3];
   char succ_two_IP[50];
   char succ_two_TCP[10];
+  char chord[3];
+  char chord_IP[50];
+  char chord_TCP[10];
   int ring_bool;
   int chord_bool;                   // boleano se ainda não foi criada uma corda está a 0 senão está a 1
+  
+  /* file descriptors necessários para o select*/
+  int listen_fd;
+  int pred_fd;
+  int succ_fd;
+  int chord_fd;
+  /*********************************************/
+
   char routing_table[16][16][50];   // tabela de encaminhamento do próprio nó
   char short_paths_table[16][50];   // tabela de caminhos mais curtos do próprio nó
   char expedition_table[16][3];     // tabela de expedição do próprio nó
