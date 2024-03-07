@@ -40,21 +40,17 @@ void join(char ring[], node *n)
             {
                 sprintf(n->self, "0%d", new);
             }
+            else
+            {
+                sprintf(n->self, "%d", new);
+            }
         }
-        // ENTRY
+        // ENTRY para o sucessor
         ENTRY(connectIP, connectTCP, n);
         // sucessor
         strcpy(n->succ, connectid);
         strcpy(n->succ_IP, connectIP);
         strcpy(n->succ_TCP, connectTCP);
-        // predecessor
-        strcpy(n->pred, connectid);
-        strcpy(n->pred_IP, connectIP);
-        strcpy(n->pred_TCP, connectTCP);
-        // segundo sucessor
-        strcpy(n->succ_two, n->self);
-        strcpy(n->succ_two_IP, n->self_IP);
-        strcpy(n->succ_two_TCP, n->self_TCP);
         // registar servidor de nós
         REG(ring, answer, n);
         if (strcmp(answer, "OKREG") != 0)
@@ -81,7 +77,7 @@ void show_topology(node *node, int chord_bool)
     printf("\n================================================\n\n");
 
     printf("Estado do protocolo topológico:\n\n");
-    printf("\tPróprio anel:\n");
+    printf("\tPróprio nó:\n");
     printf("\t\u2022 id: %s \n", node->self);
     printf("\t\u2022 IP: %s \n", node->self_IP);
     printf("\t\u2022 Porto: %s \n\n", node->self_TCP);

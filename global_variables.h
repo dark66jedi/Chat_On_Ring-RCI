@@ -22,8 +22,8 @@
 
 EXTERN char regIP[];
 EXTERN char regUDP[];
-EXTERN char IP[];
-EXTERN char TCP[];
+EXTERN char IP_global[];
+EXTERN char TCP_global[];
 
 typedef struct node
 {
@@ -40,7 +40,7 @@ typedef struct node
   char succ_two_IP[50];
   char succ_two_TCP[10];
   int ring_bool;
-  int chord_bool;
+  int chord_bool;                   // boleano se ainda não foi criada uma corda está a 0 senão está a 1
   char routing_table[16][16][50];   // tabela de encaminhamento do próprio nó
   char short_paths_table[16][50];   // tabela de caminhos mais curtos do próprio nó
   char expedition_table[16][3];     // tabela de expedição do próprio nó

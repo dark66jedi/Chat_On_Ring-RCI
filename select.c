@@ -1,7 +1,7 @@
 #include "select.h"
 #include "user_cmds.h"
 
-void impl_select(char IP[], char TCP[], char regIP[], char regUDP[], node *node)
+void impl_select(node *node)
 {
   fd_set rfds;
   struct addrinfo hints, *res;
@@ -26,7 +26,7 @@ void impl_select(char IP[], char TCP[], char regIP[], char regUDP[], node *node)
   hints.ai_socktype = SOCK_DGRAM; // UDP socket
   hints.ai_flags = AI_PASSIVE;
 
-  if ((errcode_udp = getaddrinfo(NULL, node->self_TCP, &hints, &res)) != 0)
+  if ((errcode_udp = getaddrinfo(IP_global, TCP_global, &hints, &res)) != 0)
   {
     printf("Erro getaddrinfo udp");
     exit(1);
@@ -50,7 +50,7 @@ void impl_select(char IP[], char TCP[], char regIP[], char regUDP[], node *node)
   hints.ai_family = AF_INET;       // IPv4
   hints.ai_socktype = SOCK_STREAM; // TCP socket
   hints.ai_flags = AI_PASSIVE;
-  if ((errcode_tcp = getaddrinfo(NULL, node->self_TCP, &hints, &res)) != 0)
+  if ((errcode_tcp = getaddrinfo(IP_global, TCP_global, &hints, &res)) != 0)
   {
     printf("Erro getaddrinfo tcp");
     exit(1);
@@ -88,11 +88,13 @@ void impl_select(char IP[], char TCP[], char regIP[], char regUDP[], node *node)
     if (FD_ISSET(0, &rfds))
     {
       // coisas no terminal
+      FD_CLR(0,&rfds);
       choose_terminal_cmd(node);
     }
     if (FD_ISSET(tcpfd, &rfds))
     {
       // comunicação de outros nós
+      FD_CLR(tcpfd,&rfds);
       addrlen = sizeof(addr);
       if ((newfd = accept(tcpfd, &addr, &addrlen)) == -1)
       {
@@ -116,6 +118,7 @@ void impl_select(char IP[], char TCP[], char regIP[], char regUDP[], node *node)
     { // confirmar se faz sentido, porque em principio, o tejo nunca fala connosco sem que nós perguntemos algo
       // comunicação do servidor
       // printf("Funcionalidade por desenvolver: UDP");
+      FD_CLR(udpfd,&rfds);
       addrlen = sizeof(addr);
       memset(buffer, '\0', 128);
       if ((nread = recvfrom(udpfd, buffer, 128, 0, &addr, &addrlen)) == -1)
@@ -154,8 +157,8 @@ void choose_terminal_cmd(node *node)
     }
     sscanf(readInter, "%s %s %s", modo, ring, id);
     strcpy(node->self, id);
-    strcpy(node->self_IP, IP);
-    strcpy(node->self_TCP, TCP);
+    strcpy(node->self_IP, IP_global);
+    strcpy(node->self_TCP, TCP_global);
     join(ring, node);
   }
 

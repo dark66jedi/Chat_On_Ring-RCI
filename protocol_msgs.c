@@ -56,7 +56,7 @@ void ENTRY(char connectIP[], char connectTCP[], node *node)
 
 void receive_ENTRY()
 {
-    printf("receive_ENTRY");
+    printf("\n============| receive_ENTRY |============\n\n");
 }
 
 void PRED(char connectIP[], char connectTCP[], node *node)

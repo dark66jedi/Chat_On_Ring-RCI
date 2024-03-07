@@ -18,8 +18,8 @@
 
 char regIP[30];
 char regUDP[10];
-char IP[30];
-char TCP[10];
+char IP_global[30];
+char TCP_global[10];
 // node self_node;
 
 int main(int argc, char *argv[])
@@ -32,15 +32,15 @@ int main(int argc, char *argv[])
   {
     if (argc == 5)
     {
-      strcpy(IP, argv[1]);
-      strcpy(TCP, argv[2]);
+      strcpy(IP_global, argv[1]);
+      strcpy(TCP_global, argv[2]);
       strcpy(regIP, argv[3]);
       strcpy(regUDP, argv[4]);
     }
     else
     {
-      strcpy(IP, argv[1]);
-      strcpy(TCP, argv[2]);
+      strcpy(IP_global, argv[1]);
+      strcpy(TCP_global, argv[2]);
       strcpy(regIP, "193.136.138.142");
       strcpy(regUDP, "59000");
     }
@@ -48,7 +48,7 @@ int main(int argc, char *argv[])
     n->chord_bool = 0;
     n->ring_bool = 0;
   
-    impl_select(n->self_IP, n->self_TCP, regIP, regUDP, n);
+    impl_select(n);
   }
   else
   {
