@@ -7,7 +7,9 @@ void NODES(char ring[], char answer[]);
 void REG(char ring[], char answer[], node *node);
 void UNREG(char ring[], char answer[], node *node);
 void ENTRY(char connectIP[], char connectTCP[], node *node);
+void ENTRY_not_me(char connectIP[], char connectTCP[], node *node, char aux_id[], char aux_IP[], char aux_TCP[]);
 void PRED(char connectIP[], char connectTCP[], node *node);
+void SUCC(char connectIP[], char connectTCP[], node *node);
 void CHORD(char connectIP[], char connectTCP[], node *node);
 void receive_ENTRY();
 

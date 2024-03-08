@@ -5,6 +5,6 @@
 
 void impl_select(node *node);
 void choose_terminal_cmd(node *node);
-void choose_received_protocol(node *node, char buffer[]);
+void choose_received_protocol(node *node, char buffer[], int fd);
 
 #endif

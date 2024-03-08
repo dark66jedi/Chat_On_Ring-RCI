@@ -39,6 +39,21 @@ void UNREG(char ring[], char answer[], node *node)
     strcpy(answer, UDP_Client(regIP, regUDP, msg_to_send));
 }
 
+void ENTRY_not_me(char connectIP[], char connectTCP[], node *node, char aux_id[], char aux_IP[], char aux_TCP[])
+{
+    char msg_to_send[50] = "ENTRY ";
+    
+    strcat(msg_to_send, aux_id);
+    strcat(msg_to_send, " ");
+    strcat(msg_to_send, aux_IP);
+    strcat(msg_to_send, " ");
+    strcat(msg_to_send, aux_TCP);
+    strcat(msg_to_send, "\n");
+    printf("\nmessage: %s\n", msg_to_send);
+
+    TCP_Client(connectIP, connectTCP, msg_to_send);
+}
+
 void ENTRY(char connectIP[], char connectTCP[], node *node)
 {
     char msg_to_send[50] = "ENTRY ";
@@ -49,7 +64,7 @@ void ENTRY(char connectIP[], char connectTCP[], node *node)
     strcat(msg_to_send, " ");
     strcat(msg_to_send, node->self_TCP);
     strcat(msg_to_send, "\n");
-    printf("\nmessage: %s\n", msg_to_send);
+    //printf("\nmessage: %s\n", msg_to_send);
 
     TCP_Client(connectIP, connectTCP, msg_to_send);
 }
@@ -64,6 +79,20 @@ void PRED(char connectIP[], char connectTCP[], node *node)
     char msg_to_send[50] = "PRED ";
     
     strcat(msg_to_send, node->self);
+    strcat(msg_to_send, "\n");
+
+    TCP_Client(connectIP, connectTCP, msg_to_send);
+}
+
+void SUCC(char connectIP[], char connectTCP[], node *node)
+{
+    char msg_to_send[50] = "SUCC ";
+    
+    strcat(msg_to_send, node->succ);
+    strcat(msg_to_send, " ");
+    strcat(msg_to_send, node->succ_IP);
+    strcat(msg_to_send, " ");
+    strcat(msg_to_send, node->succ_TCP);
     strcat(msg_to_send, "\n");
 
     TCP_Client(connectIP, connectTCP, msg_to_send);

@@ -36,112 +36,13 @@ void impl_select(node *node)
 
   if (bind(node->listen_fd, res->ai_addr, res->ai_addrlen) == -1)
   {
-    printf("Erro bind tcp");
+    printf("Erro bind tcp escuta");
     exit(1);
   }
 
   if (listen(node->listen_fd, 5) == -1)
   {
     printf("Erro listen tcp");
-    exit(1);
-  }
-  maxfd++;
-  /********************************************************************/
-
-  /* socket de escuta do pred tcp (receber informação do nós predecedor)*/
-  if ((node->pred_fd = socket(AF_INET, SOCK_STREAM, 0)) == -1)
-    exit(1);
-  if (node->pred_fd == -1)
-  {
-    printf("Erro na criação da socket tcp");
-    exit(1);
-  }
-
-  memset(&hints, 0, sizeof hints);
-  hints.ai_family = AF_INET;       // IPv4
-  hints.ai_socktype = SOCK_STREAM; // TCP socket
-  hints.ai_flags = AI_PASSIVE;
-  if ((errcode_pred_tcp = getaddrinfo(IP_global, TCP_global, &hints, &res)) != 0)
-  {
-    printf("Erro getaddrinfo tcp");
-    exit(1);
-  }
-
-  if (bind(node->pred_fd, res->ai_addr, res->ai_addrlen) == -1)
-  {
-    printf("Erro bind tcp");
-    exit(1);
-  }
-
-  if (listen(node->pred_fd, 1) == -1)
-  {
-    printf("Erro listen pred tcp");
-    exit(1);
-  }
-  maxfd++;
-  /********************************************************************/
-
-  /* socket de escuta do succ tcp (receber informação do nó sucessor)*/
-  if ((node->succ_fd = socket(AF_INET, SOCK_STREAM, 0)) == -1)
-    exit(1);
-  if (node->succ_fd == -1)
-  {
-    printf("Erro na criação da socket tcp");
-    exit(1);
-  }
-
-  memset(&hints, 0, sizeof hints);
-  hints.ai_family = AF_INET;       // IPv4
-  hints.ai_socktype = SOCK_STREAM; // TCP socket
-  hints.ai_flags = AI_PASSIVE;
-  if ((errcode_succ_tcp = getaddrinfo(IP_global, TCP_global, &hints, &res)) != 0)
-  {
-    printf("Erro getaddrinfo tcp");
-    exit(1);
-  }
-
-  if (bind(node->succ_fd, res->ai_addr, res->ai_addrlen) == -1)
-  {
-    printf("Erro bind tcp");
-    exit(1);
-  }
-
-  if (listen(node->succ_fd, 1) == -1)
-  {
-    printf("Erro listen pred tcp");
-    exit(1);
-  }
-  maxfd++;
-  /********************************************************************/
-
-  /* socket de escuta do chord tcp (receber informação do nó com quem estabelecermos a corda)*/
-  if ((node->chord_fd = socket(AF_INET, SOCK_STREAM, 0)) == -1)
-    exit(1);
-  if (node->chord_fd == -1)
-  {
-    printf("Erro na criação da socket tcp");
-    exit(1);
-  }
-
-  memset(&hints, 0, sizeof hints);
-  hints.ai_family = AF_INET;       // IPv4
-  hints.ai_socktype = SOCK_STREAM; // TCP socket
-  hints.ai_flags = AI_PASSIVE;
-  if ((errcode_chord_tcp = getaddrinfo(IP_global, TCP_global, &hints, &res)) != 0)
-  {
-    printf("Erro getaddrinfo tcp");
-    exit(1);
-  }
-
-  if (bind(node->chord_fd, res->ai_addr, res->ai_addrlen) == -1)
-  {
-    printf("Erro bind tcp");
-    exit(1);
-  }
-
-  if (listen(node->chord_fd, 1) == -1)
-  {
-    printf("Erro listen pred tcp");
     exit(1);
   }
   maxfd++;
@@ -194,10 +95,10 @@ void impl_select(node *node)
           exit(1);
         }
         // identificar o protocolo recebido
-        choose_received_protocol(node, buffer);
+        choose_received_protocol(node, buffer, newfd);
       }
-      close(newfd);
-      close(node->listen_fd);
+      //close(newfd); //acho que não podemos dar close 
+      //close(node->listen_fd);
     }
     /**********************************************************************/
 
@@ -220,7 +121,7 @@ void impl_select(node *node)
           exit(1);
         }
         // identificar o protocolo recebido
-        choose_received_protocol(node, buffer);
+        choose_received_protocol(node, buffer, newfd);
       }
       close(newfd);
     }
@@ -245,7 +146,7 @@ void impl_select(node *node)
           exit(1);
         }
         // identificar o protocolo recebido
-        choose_received_protocol(node, buffer);
+        choose_received_protocol(node, buffer, newfd);
       }
       close(newfd);
     }
@@ -270,7 +171,7 @@ void impl_select(node *node)
           exit(1);
         }
         // identificar o protocolo recebido
-        choose_received_protocol(node, buffer);
+        choose_received_protocol(node, buffer, newfd);
       }
       close(newfd);
     }
@@ -298,7 +199,7 @@ void choose_terminal_cmd(node *node)
   {
     if (node->ring_bool == 1)
     {
-      printf("\n=== Nó já pertence a um anel! ===\n");
+      printf("\n=== Nó já pertence a um anel! ===\n"); //Not sure se é suposto fazer isto
       return;
     }
     sscanf(readInter, "%s %s %s", modo, ring, id);
@@ -455,14 +356,45 @@ void choose_terminal_cmd(node *node)
   }
 }
 
-void choose_received_protocol(node *node, char buffer[])
+void choose_received_protocol(node *node, char buffer[], int fd)
 {
   char protocol[128];
+  char aux_id[3];
+  char aux_IP[50];
+  char aux_TCP[10];
 
   sscanf(buffer, "%s", protocol);
   if (strcmp(protocol, "ENTRY") == 0)
   {
-    receive_ENTRY();
+    //receive_ENTRY(); //porquê esta função e não fazer tudo aqui? É que se não estou só a enviar mais coisas para lá
+    if(fd = node->succ_fd){
+      //preciso atualizar fd
+      sscanf(buffer, "%s %s %s %s", protocol, aux_id, aux_IP, aux_TCP);
+      PRED(aux_IP, aux_TCP, node);
+      strcpy(node->succ_two, node->succ);
+      strcpy(node->succ_two_IP, node->succ_IP);
+      strcpy(node->succ_two_TCP, node->succ_TCP);
+      strcpy(node->succ, aux_id);
+      strcpy(node->succ_IP, aux_IP);
+      strcpy(node->succ_TCP, aux_TCP);
+      //strcpy(node->succ_fd,); //onde vou buscar o fd do aux?
+      SUCC(node->pred_IP, node->pred_TCP, node);
+      //Falta fechar adjacencia com o agora node->succ_two (pode ser aqui no final?)
+    } else{
+      sscanf(buffer, "%s %s %s %s", protocol, aux_id, aux_IP, aux_TCP);
+      SUCC(aux_IP, aux_TCP, node); //confirmar se quero o Entry ou o SUCC primeiro
+      ENTRY_not_me(node->pred_IP, node->pred_TCP, node, aux_id, aux_IP, aux_TCP);
+      strcpy(node->pred,aux_id);
+      strcpy(node->pred_IP,aux_IP);
+      strcpy(node->pred_TCP,aux_TCP);
+      node->pred_fd = fd;
+    }
     // sscanf(buffer, "%s %s %s %s", protocol, node->pred, node->pred_IP, node->pred_TCP);
+  }
+  if (strcmp(protocol, "SUCC") == 0){
+    sscanf(buffer, "%s %s %s %s", protocol, aux_id, aux_IP, aux_TCP);
+    strcpy(node->succ_two, aux_id);
+    strcpy(node->succ_two_IP, aux_IP);
+    strcpy(node->succ_two_TCP, aux_TCP);
   }
 }

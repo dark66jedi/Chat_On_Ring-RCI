@@ -25,8 +25,8 @@ void TCP_Client(char connectIP[], char connectTCP[], char mensagem[])
     printf("Erro errcode");
     exit(1);
   }
-  printf("\nconnectIP: %s", connectIP);
-  printf("\nconnectTCP: %s\n", connectTCP);
+  //printf("\nconnectIP: %s", connectIP);
+  //printf("\nconnectTCP: %s\n", connectTCP);
   n = connect(fd, res->ai_addr, res->ai_addrlen);
   if (n == -1)
   {

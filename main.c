@@ -52,7 +52,7 @@ int main(int argc, char *argv[])
   }
   else
   {
-    printf("Erro na inicialização do programa\n"); //DICIONAR sugestões de correção
+    printf("Erro na inicialização do programa\n"); //ADICIONAR sugestões de correção
   }
   return 0;
 }

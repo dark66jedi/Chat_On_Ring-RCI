@@ -2,7 +2,6 @@
 
 void join(char ring[], node *n)
 {
-    // 2º nó está a entrar no join
     char mensagemUDP[50];
     char mensagemTCP[50];
     char answer[500];
@@ -20,6 +19,16 @@ void join(char ring[], node *n)
             printf("Erro no registo do nó no anel");
             exit(1);
         }
+        strcpy(n->succ, n->self);
+        strcpy(n->succ_IP, n->self_IP);
+        strcpy(n->succ_TCP, n->self_TCP);
+        strcpy(n->pred, n->self);
+        strcpy(n->pred_IP, n->self_IP);
+        strcpy(n->pred_TCP, n->self_TCP);
+        strcpy(n->succ_two, n->self);
+        strcpy(n->succ_two_IP, n->self_IP);
+        strcpy(n->succ_two_TCP, n->self_TCP);
+        n->ring_bool = 1;
     }
     else // VAI SER PRECISO MAIS UM IF, ESTE SÓ FUNCIONA PARA 2 NÓS
     {
@@ -58,6 +67,7 @@ void join(char ring[], node *n)
             printf("Erro no registo do nó no anel");
             exit(1);
         }
+        n->ring_bool = 1;
     }
 
     /*
