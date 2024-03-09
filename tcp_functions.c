@@ -18,24 +18,25 @@ void TCP_Client(char connectIP[], char connectTCP[], char mensagem[], int sock_c
       printf("Erro fd");
       exit(1);
     }
-    memset(&hints, 0, sizeof hints);
-    hints.ai_family = AF_INET;       // IPv4
-    hints.ai_socktype = SOCK_STREAM; // TCP socket
-    // printf("dentro do client: %s %s", connectIP, connectTCP);
-    errcode = getaddrinfo(connectIP, connectTCP, &hints, &res);
-    if (errcode != 0)
-    {
-      printf("Erro errcode"); // ERRO AQUI
-      exit(1);
-    }
+  }
+  //fprintf(stdout,"socket no tcp client: %d", fd);
+  memset(&hints, 0, sizeof hints);
+  hints.ai_family = AF_INET;       // IPv4
+  hints.ai_socktype = SOCK_STREAM; // TCP socket
+  // printf("dentro do client: %s %s", connectIP, connectTCP);
+  errcode = getaddrinfo(connectIP, connectTCP, &hints, &res);
+  if (errcode != 0)
+  {
+    printf("Erro errcode"); // ERRO AQUI
+    exit(1);
   }
 
-   //printf("\nconnectIP: %s", connectIP);
+    printf("\nconnectIP: %s", connectIP);
    //printf("\nconnectTCP: %s\n", connectTCP);
   n = connect(fd, res->ai_addr, res->ai_addrlen);
   if (n == -1)
   {
-    printf("Erro no connect");
+    printf("Erro no connect"); //pode ser por outra comunicação já estar a ser feito nessa socket?
     exit(1);
   }
 

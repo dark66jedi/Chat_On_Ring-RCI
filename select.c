@@ -28,7 +28,7 @@ void impl_select(node *node)
   hints.ai_family = AF_INET;       // IPv4
   hints.ai_socktype = SOCK_STREAM; // TCP socket
   hints.ai_flags = AI_PASSIVE;
-  if ((errcode_listen_tdp = getaddrinfo(NULL, TCP_global, &hints, &res)) != 0) //Duarte tinha IP_global, why
+  if ((errcode_listen_tdp = getaddrinfo(NULL, TCP_global, &hints, &res)) != 0) // Duarte tinha IP_global, why
   {
     printf("Erro getaddrinfo tcp");
     exit(1);
@@ -45,145 +45,154 @@ void impl_select(node *node)
     printf("Erro listen tcp");
     exit(1);
   }
-  maxfd = max(fd, node->pred_fd, node->succ_fd, node->chord_fd);
   /********************************************************************/
+  //while (i < 2){
+    //FD_ZERO(&rfds);
+    // maxfd = max(fd, node->pred_fd, node->succ_fd, node->chord_fd);
+    while (1)
+    { // ACTUALLY select
+      maxfd = max(fd, node->pred_fd, node->succ_fd, node->chord_fd);
+      FD_ZERO(&rfds);
+      FD_SET(0, &rfds);
+      FD_SET(fd, &rfds);
+      if (node->pred_fd != 0)
+        FD_SET(node->pred_fd, &rfds); // só se pode dar set se existir
+      if (node->succ_fd != 0)
+        FD_SET(node->succ_fd, &rfds);
+      if (node->chord_fd != 0)
+        FD_SET(node->chord_fd, &rfds);
 
-  while (1)
-  { // ACTUALLY select
-    FD_ZERO(&rfds);
-    FD_SET(0, &rfds);
-    FD_SET(fd, &rfds);
-    if(node->pred_fd !=0) FD_SET(node->pred_fd, &rfds); //só se pode dar set se existir
-    if(node->succ_fd !=0) FD_SET(node->succ_fd, &rfds);
-    if(node->chord_fd !=0) FD_SET(node->chord_fd, &rfds);
+      // Show Interface for each command
+      // não pode estar aqui, se não de cada vez que há uma comunicação de outro nó, "imprime" a interface de novo
 
-    // Show Interface for each command
-    //não pode estar aqui, se não de cada vez que há uma comunicação de outro nó, "imprime" a interface de novo
+      counter = select(maxfd + 1, &rfds, (fd_set *)NULL, (fd_set *)NULL, (struct timeval *)NULL);
 
-    counter = select(maxfd + 1, &rfds, (fd_set *)NULL, (fd_set *)NULL, (struct timeval *)NULL);
-
-    // The select function returns the number of file descriptors (the number of bits from readfds, writefds, and errorfds).
-    if (counter == 0)
-    { // caso não se leia nada-> leave?
-    }
-
-    /* fd responsável pelo terminal****************************************/
-    if (FD_ISSET(0, &rfds))
-    {
-      // coisas no terminal
-      FD_CLR(0,&rfds);
-      Interface(node);
-      choose_terminal_cmd(node);
-    }
-    /**********************************************************************/
-
-    /* fd responsável pelo canal de escuta ********************************/
-    if (FD_ISSET(fd, &rfds))
-    {
-      // comunicação de outros nós
-      //fprintf(stdout,"Recebi uma mensagem de alguém\n");
-      FD_CLR(fd,&rfds);
-      addrlen = sizeof(addr);
-      if ((newfd = accept(fd, &addr, &addrlen)) == -1)
-      {
-        printf("Erro no accept");
-        exit(1);
+      // The select function returns the number of file descriptors (the number of bits from readfds, writefds, and errorfds).
+      if (counter == 0)
+      { // caso não se leia nada-> leave?
       }
-      while ((n = read(newfd, buffer, 128)) != 0) //break para parar este while? Sim
+
+      /* fd responsável pelo terminal****************************************/
+      if (FD_ISSET(0, &rfds))
       {
-        if (n == -1)
+        // coisas no terminal
+        FD_CLR(0, &rfds);
+        Interface(node);
+        choose_terminal_cmd(node);
+      }
+      /**********************************************************************/
+
+      /* fd responsável pelo canal de escuta ********************************/
+      if (FD_ISSET(fd, &rfds))
+
+      {
+        // comunicação de outros nós
+        //fprintf(stdout,"Recebi uma mensagem de alguém\n");
+        //fprintf(stdout,"foi de: %d\n", fd);
+        //FD_CLR(fd, &rfds);
+        addrlen = sizeof(addr);
+        if ((newfd = accept(fd, &addr, &addrlen)) == -1)
         {
-          printf("Erro no n");
+          printf("Erro no accept");
           exit(1);
         }
-        // identificar o protocolo recebido
-        //printf("Recebi de novo");
-        choose_received_protocol(node, buffer, newfd);
-        break; //necessário para parar o while se não eles mesmo depois de tudo continua aqui e não deixa ler mais coisas do terminal
-      }
-      //printf("n é logo 0? %d\n", n);
-      //close(newfd); //acho que não podemos dar close 
-      //close(node->listen_fd);
-    }
-    /**********************************************************************/
-
-    /* fd responsável pelo canal do predecessor ***************************/
-    if (FD_ISSET(node->pred_fd, &rfds))
-    {
-      //printf("Recebi uma mensagem do meu pred");
-      // comunicação de outros nós
-      FD_CLR(node->pred_fd,&rfds);
-      addrlen = sizeof(addr);
-      if ((newfd = accept(node->pred_fd, &addr, &addrlen)) == -1)
-      {
-        printf("Erro no accept");
-        exit(1);
-      }
-      while ((n = read(newfd, buffer, 128)) != 0) //precisamos de parar este while?
-      {
-        if (n == -1)
+        while ((n = read(newfd, buffer, 128)) != 0) // break para parar este while? Sim
         {
-          printf("Erro no n");
+          if (n == -1)
+          {
+            printf("Erro no n");
+            exit(1);
+          }
+          // identificar o protocolo recebido
+          // printf("Recebi de novo");
+          //fprintf(stdout,"crei nova socket com numero: %d\n", newfd);
+          choose_received_protocol(node, buffer, newfd);
+          break; // necessário para parar o while se não eles mesmo depois de tudo continua aqui e não deixa ler mais coisas do terminal
+        }
+        // printf("n é logo 0? %d\n", n);
+        // close(newfd); //acho que não podemos dar close
+        // close(node->listen_fd);
+      }
+      /**********************************************************************/
+
+      /* fd responsável pelo canal do predecessor ***************************/
+      if (FD_ISSET(node->pred_fd, &rfds))
+      {
+        printf("Recebi uma mensagem do meu pred");
+        //  comunicação de outros nós
+        //FD_CLR(node->pred_fd, &rfds);
+        addrlen = sizeof(addr);
+        if ((newfd = accept(node->pred_fd, &addr, &addrlen)) == -1)
+        {
+          printf("Erro no accept");
           exit(1);
         }
-        // identificar o protocolo recebido
-        choose_received_protocol(node, buffer, newfd);
-      }
-      // close(newfd); // não pdoemos dar close, só no leave
-    }
-    /**********************************************************************/
-
-    /* fd responsável pelo canal do sucessor ******************************/
-    if (FD_ISSET(node->succ_fd, &rfds))
-    {
-      //printf("Recebi uma mensagem do meu succ");
-      // comunicação de outros nós
-      FD_CLR(node->succ_fd,&rfds);
-      addrlen = sizeof(addr);
-      if ((newfd = accept(node->succ_fd, &addr, &addrlen)) == -1)
-      {
-        printf("Erro no accept");
-        exit(1);
-      }
-      while ((n = read(newfd, buffer, 128)) != 0)
-      {
-        if (n == -1)
+        while ((n = read(newfd, buffer, 128)) != 0) // precisamos de parar este while?
         {
-          printf("Erro no n");
+          if (n == -1)
+          {
+            printf("Erro no n");
+            exit(1);
+          }
+          // identificar o protocolo recebido
+          choose_received_protocol(node, buffer, newfd);
+        }
+        // close(newfd); // não pdoemos dar close, só no leave
+      }
+      /**********************************************************************/
+
+      /* fd responsável pelo canal do sucessor ******************************/
+      if (FD_ISSET(node->succ_fd, &rfds))
+      {
+        printf("Recebi uma mensagem do meu succ");
+        //  comunicação de outros nós
+        //FD_CLR(node->succ_fd, &rfds);
+        addrlen = sizeof(addr);
+        if ((newfd = accept(node->succ_fd, &addr, &addrlen)) == -1)
+        {
+          printf("Erro no accept");
           exit(1);
         }
-        // identificar o protocolo recebido
-        choose_received_protocol(node, buffer, newfd);
-      }
-     // close(newfd); // não pdoemos dar close, só no leave
-    }
-    /**********************************************************************/
-
-    /* fd responsável pelo canal da corda *********************************/
-    if (FD_ISSET(node->chord_fd, &rfds))
-    {
-      // comunicação de outros nós
-      FD_CLR(node->chord_fd,&rfds);
-      addrlen = sizeof(addr);
-      if ((newfd = accept(node->chord_fd, &addr, &addrlen)) == -1)
-      {
-        printf("Erro no accept");
-        exit(1);
-      }
-      while ((n = read(newfd, buffer, 128)) != 0)
-      {
-        if (n == -1)
+        while ((n = read(newfd, buffer, 128)) != 0)
         {
-          printf("Erro no n");
+          if (n == -1)
+          {
+            printf("Erro no n");
+            exit(1);
+          }
+          // identificar o protocolo recebido
+          choose_received_protocol(node, buffer, newfd);
+        }
+        // close(newfd); // não pdoemos dar close, só no leave
+      }
+      /**********************************************************************/
+
+      /* fd responsável pelo canal da corda *********************************/
+      if (FD_ISSET(node->chord_fd, &rfds))
+      {
+        // comunicação de outros nós
+        //FD_CLR(node->chord_fd, &rfds);
+        addrlen = sizeof(addr);
+        if ((newfd = accept(node->chord_fd, &addr, &addrlen)) == -1)
+        {
+          printf("Erro no accept");
           exit(1);
         }
-        // identificar o protocolo recebido
-        choose_received_protocol(node, buffer, newfd);
+        while ((n = read(newfd, buffer, 128)) != 0)
+        {
+          if (n == -1)
+          {
+            printf("Erro no n");
+            exit(1);
+          }
+          // identificar o protocolo recebido
+          choose_received_protocol(node, buffer, newfd);
+        }
+        // close(newfd); // não pdoemos dar close, só no leave
       }
-      //close(newfd); // não pdoemos dar close, só no leave
+      /**********************************************************************/
     }
-    /**********************************************************************/
-  }
+  //}
 }
 
 void choose_terminal_cmd(node *node)
@@ -195,7 +204,7 @@ void choose_terminal_cmd(node *node)
   char succid[3], succIP[30], succTCP[10];
   char message[129];
 
-  //printf("Entrei no terminal?");
+  // printf("Entrei no terminal?");
   if (fgets(readInter, sizeof(readInter), stdin) == NULL)
   {
     exit(0);
@@ -207,7 +216,7 @@ void choose_terminal_cmd(node *node)
   {
     if (node->ring_bool == 1)
     {
-      printf("\n=== Nó já pertence a um anel! ===\n"); //Not sure se é suposto fazer isto
+      printf("\n=== Nó já pertence a um anel! ===\n"); // Not sure se é suposto fazer isto
       return;
     }
     sscanf(readInter, "%s %s %s", modo, ring, id);
@@ -228,20 +237,22 @@ void choose_terminal_cmd(node *node)
         printf("\n=== Nó já pertence a um anel! ===\n");
         return;
       }
-      if(strcmp(modo, "dj") == 0){
+      if (strcmp(modo, "dj") == 0)
+      {
         sscanf(readInter, "%s %s %s %s %s", modo, id, succid, succIP, succTCP);
         sprintf(buffer, "%s %s %s %s", id, succid, succIP, succTCP);
-        //printf("Buffer: %s", buffer);
+        // printf("Buffer: %s", buffer);
       }
-      if(strcmp(modo2, "join") == 0){
+      if (strcmp(modo2, "join") == 0)
+      {
         sscanf(readInter, "%s %s %s %s %s %s", modo, modo2, id, succid, succIP, succTCP);
         sprintf(buffer, "%s %s %s %s", id, succid, succIP, succTCP);
-        //printf("Buffer: %s", buffer);
+        // printf("Buffer: %s", buffer);
       }
       strcpy(node->self, id);
       strcpy(node->self_IP, IP_global);
       strcpy(node->self_TCP, TCP_global);
-      //printf("minhas informações %s %s %s:\n", node->self,node->self_IP, node->self_TCP);
+      // printf("minhas informações %s %s %s:\n", node->self,node->self_IP, node->self_TCP);
       direct_join(ring, node, buffer);
     }
     else
@@ -389,60 +400,69 @@ void choose_received_protocol(node *node, char buffer[], int fd)
   //fprintf(stdout, "Recebi algo: %s", protocol);
   if (strcmp(protocol, "ENTRY") == 0)
   {
-    //receive_ENTRY(); //porquê esta função e não fazer tudo aqui? É que se não estou só a enviar mais coisas para lá
-    if(fd = node->succ_fd){
-      //fprintf(stdout, "Recebi um entry not me\n");
+    // receive_ENTRY(); //porquê esta função e não fazer tudo aqui? É que se não estou só a enviar mais coisas para lá
+    if (fd == node->succ_fd)
+    {
+      fprintf(stdout, "Recebi um entry not me\n");
       sscanf(buffer, "%s %s %s %s", protocol, aux_id, aux_IP, aux_TCP);
-      PRED(aux_IP, aux_TCP, node); 
+      PRED(aux_IP, aux_TCP, node);
       strcpy(node->succ_two, node->succ);
       strcpy(node->succ_two_IP, node->succ_IP);
       strcpy(node->succ_two_TCP, node->succ_TCP);
       strcpy(node->succ, aux_id);
       strcpy(node->succ_IP, aux_IP);
       strcpy(node->succ_TCP, aux_TCP);
-      node->succ_fd =fd; //fd é o fd do que recebemos
+      node->succ_fd = fd; // fd é o fd do que recebemos
       SUCC(node->pred_IP, node->pred_TCP, node, 1);
-      //Falta fechar adjacencia com o agora node->succ_two (pode ser aqui no final?)
-    } else{ //caso de novo nó
-      //fprintf(stdout, "Recebi um entry\n");
+      // Falta fechar adjacencia com o agora node->succ_two (pode ser aqui no final?)
+    }
+    else
+    { // caso de novo nó
+      fprintf(stdout, "Recebi um entry\n"); 
       sscanf(buffer, "%s %s %s %s", protocol, aux_id, aux_IP, aux_TCP);
-      if(strcmp(node->pred,node->self) == 0){ //caso em que ainda só são 2 nós na rede
-       // printf("E aqui, entrei?");
-        strcpy(node->pred,aux_id);
-        strcpy(node->pred_IP,aux_IP);
-        strcpy(node->pred_TCP,aux_TCP);
+      if (strcmp(node->pred, node->self) == 0)
+      { // caso em que ainda só são 2 nós na rede
+        // printf("E aqui, entrei?");
+        strcpy(node->pred, aux_id);
+        strcpy(node->pred_IP, aux_IP);
+        strcpy(node->pred_TCP, aux_TCP);
         node->pred_fd = fd;
-        strcpy(node->succ,aux_id);
-        strcpy(node->succ_IP,aux_IP);
-        strcpy(node->succ_TCP,aux_TCP);
+        //fprintf(stdout, "fd quando recebo entry1: %d", fd);
+        strcpy(node->succ, aux_id);
+        strcpy(node->succ_IP, aux_IP);
+        strcpy(node->succ_TCP, aux_TCP);
         SUCC(aux_IP, aux_TCP, node, 0);
-        PRED(aux_IP, aux_TCP, node); //aqui faz logo a conexão
-      } else{ //+2 nós
-        //fprintf(stdout, "Entrei no +2 nós");
+        PRED(aux_IP, aux_TCP, node); // aqui faz logo a conexão
+      }
+      else
+      { //+2 nós
+       // fprintf(stdout, "Entrei no +2 nós");
         SUCC(aux_IP, aux_TCP, node, 0);
         ENTRY_not_me(node->pred_IP, node->pred_TCP, node, aux_id, aux_IP, aux_TCP);
-        strcpy(node->pred,aux_id);
-        strcpy(node->pred_IP,aux_IP);
-        strcpy(node->pred_TCP,aux_TCP);
+        strcpy(node->pred, aux_id);
+        strcpy(node->pred_IP, aux_IP);
+        strcpy(node->pred_TCP, aux_TCP);
         node->pred_fd = fd;
-        //fprintf(stdout, "meu pred:%s", node->pred);
-      }      
+        // fprintf(stdout, "meu pred:%s", node->pred);
+      }
     }
     // sscanf(buffer, "%s %s %s %s", protocol, node->pred, node->pred_IP, node->pred_TCP);
   }
-  if (strcmp(protocol, "SUCC") == 0){
-    //fprintf(stdout,"Recebi o SUCC");
+  if (strcmp(protocol, "SUCC") == 0)
+  {
+    fprintf(stdout, "Recebi o SUCC");
     sscanf(buffer, "%s %s %s %s", protocol, aux_id, aux_IP, aux_TCP);
     strcpy(node->succ_two, aux_id);
     strcpy(node->succ_two_IP, aux_IP);
     strcpy(node->succ_two_TCP, aux_TCP);
-    //printf("2º sucessor: %s %s %s", node->succ_two, node->succ_two_IP, node->succ_two_TCP);
+    // printf("2º sucessor: %s %s %s", node->succ_two, node->succ_two_IP, node->succ_two_TCP);
   }
-  if (strcmp(protocol, "PRED") == 0){
-    //fprintf(stdout,"Recebi o PRED");
+  if (strcmp(protocol, "PRED") == 0)
+  {
+    fprintf(stdout, "Recebi o PRED");
     sscanf(buffer, "%s %s", protocol, aux_id);
     strcpy(node->pred, aux_id);
     node->pred_fd = fd;
-    //COMO TENHO O IP E PORTO DELE?
+    // COMO TENHO O IP E PORTO DELE?
   }
 }
