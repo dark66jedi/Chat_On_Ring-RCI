@@ -5,5 +5,7 @@
 
 void Interface(node *node);
 char *DeleteMethod(char *string);
+char *DeleteMethod_space(char *string);
+int max(int x, int y, int z, int j);
 
 #endif

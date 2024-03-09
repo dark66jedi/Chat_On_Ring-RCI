@@ -40,3 +40,26 @@ char *DeleteMethod(char *string)
     if (*p == '\n')
       return p + 1;
 }
+
+char *DeleteMethod_space(char *string)
+{
+  for (char *p = string;; ++p)
+    if (*p == ' ')
+      return p + 1;
+}
+
+int max(int x, int y, int z, int j)
+{
+    int highest = x;
+
+    if (y > highest) {
+        highest = y;
+    }
+    if (z > highest) {
+        highest = z;
+    }
+    if (j > highest) {
+        highest = j;
+    }
+    return highest;
+}

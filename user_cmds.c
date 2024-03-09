@@ -1,17 +1,28 @@
 #include "user_cmds.h"
 
+typedef struct nodeslist
+{
+    char id[3];
+    char IP[50];
+    char TCP[30];
+} nodeslist;
+
 void join(char ring[], node *n)
 {
     char mensagemUDP[50];
     char mensagemTCP[50];
     char answer[500];
     char connectid[3], connectIP[50], connectTCP[10];
+    nodeslist list[16];
+    char aux_id[3], aux_IP[50], aux_TCP[30];
     int new = 0;
+    int i = 0, j =0;
 
     NODES(ring, answer);
     char *after = DeleteMethod(answer);
+   // printf("after: %s\n", after);
     if (strcmp(after, "\0") == 0) // caso em que não há ainda nós no anel
-    { 
+    {
         REG(ring, answer, n);
         if (strcmp(answer, "OKREG") != 0)
         {
@@ -29,30 +40,53 @@ void join(char ring[], node *n)
         strcpy(n->succ_two_TCP, n->self_TCP);
         n->ring_bool = 1;
     }
-    else // VAI SER PRECISO MAIS UM IF, ESTE SÓ FUNCIONA PARA 2 NÓS
+    else 
     {
-        // 2º nó está a entrar aqui
-        /*
-        1. Guarda lista de nós disponíveis -> a fazer para mais do que 2 nós
-        2. Comparar ids (se iguall, dar i+1, voltar a comparar, etc, algo recursivo) ->a fazer para mais do que 2 nós
-        3. id escolhido, comparar IPs e porto? -> a fazer para mais do que 2 nós
-        4. escolher o primeiro nó na lista, para ser esse a que se liga -> a fazer para mais do que 2 nós
-        5. implement select
-        */
+        // Falta comparar IPs e porto? 
         sscanf(after, "%s %s %s", connectid, connectIP, connectTCP); // escolher o primeiro nó na lista, para ser esse a que se liga
-        if (strcmp(connectid, n->self) == 0) //só está para 2 nós, caso em que já existe esse id
+        //fprintf(stdout,"a quem em estou a conectar? %s %s %s \n", connectid, connectIP, connectTCP);
+        while (*after != '\0') // guardar nodes list para comparar
         {
-            new = atoi(n->self);
-            new = new + 1;
-            if (new < 10)
+            sscanf(after, "%s %s %s", aux_id, aux_IP, aux_TCP);
+            strcpy(list[i].id, aux_id);
+            strcpy(list[i].IP, aux_IP);
+            strcpy(list[i].TCP, aux_TCP);
+            after = DeleteMethod(after);
+            i++;
+            if (*after == '\0')
             {
-                sprintf(n->self, "0%d", new);
-            }
-            else
-            {
-                sprintf(n->self, "%d", new);
+                break;
             }
         }
+        //j= i-1;
+        //printf("j:%d", j);
+        /*for(i=i-1;i>=0;--i){
+            printf("\n");
+            printf("i=%i\n",i);
+            printf("id: %s\n",list[i].id);
+            printf("IP: %s\n",list[i].IP);
+            printf("TCP: %s\n",list[i].TCP);
+            printf("\n");
+        } */
+
+        for (j = i-1; j >= 0; j--) //caso em que já existe esse id
+        {
+            if (strcmp(list[j].id, n->self) == 0)
+            {
+                new = atoi(n->self);
+                new = new + 1;
+                if (new < 10)
+                {
+                    sprintf(n->self, "0%d", new);
+                }
+                else
+                {
+                    sprintf(n->self, "%d", new);
+                }
+                j = i;
+            }
+        }
+
         // ENTRY para o sucessor
         ENTRY(connectIP, connectTCP, n);
         // sucessor
@@ -70,15 +104,17 @@ void join(char ring[], node *n)
     }
 }
 
-void direct_join(char ring[], node *n, char buffer[]){
-    
+void direct_join(char ring[], node *n, char buffer[])
+{
+
     char modo[15], modo2[15];
     char id[3];
     char succid[3], succIP[30], succTCP[10];
 
     sscanf(buffer, "%s %s %s %s", id, succid, succIP, succTCP);
-    //printf("Scanned : %s, TCP: %s/n",succIP, succTCP);
-    if(strcmp(id,succid)==0){
+    // printf("Scanned : %s, TCP: %s/n",succIP, succTCP);
+    if (strcmp(id, succid) == 0)
+    {
         strcpy(n->succ, n->self);
         strcpy(n->succ_IP, n->self_IP);
         strcpy(n->succ_TCP, n->self_TCP);
@@ -89,13 +125,15 @@ void direct_join(char ring[], node *n, char buffer[]){
         strcpy(n->succ_two_IP, n->self_IP);
         strcpy(n->succ_two_TCP, n->self_TCP);
         n->ring_bool = 1;
-    } else{
-       // printf("Enviei IP: %s, TCP: %s/n",succIP, succTCP);
+    }
+    else
+    {
+        // printf("Enviei IP: %s, TCP: %s/n",succIP, succTCP);
         ENTRY(succIP, succTCP, n);
         // sucessor
         strcpy(n->succ, succid);
         strcpy(n->succ_IP, succIP);
-        strcpy(n->succ_TCP, succTCP); 
+        strcpy(n->succ_TCP, succTCP);
         n->ring_bool = 1;
     }
 }
@@ -120,13 +158,21 @@ void show_topology(node *node, int chord_bool)
     printf("\t\u2022 IP: %s \n", node->succ_two_IP);
     printf("\t\u2022 Porto: %s \n\n", node->succ_two_TCP);
 
+    printf("\tSeu predecessor:\n");
+    printf("\t\u2022 id: %s \n", node->pred);
+    printf("\t\u2022 IP: %s \n", node->pred_IP);
+    printf("\t\u2022 Porto: %s \n\n", node->pred_TCP);
+
     // AINDA POR FAZER
-    if(chord_bool == 1){
+    if (chord_bool == 1)
+    {
         printf("\tSeu segundo-sucessor:\n");
         printf("\t\u2022 id: %s \n", node->succ_two);
         printf("\t\u2022 IP: %s \n", node->succ_two_IP);
         printf("\t\u2022 Porto: %s \n\n", node->succ_two_TCP);
-    }else{
+    }
+    else
+    {
         printf("\tEste nó não possui cordas\n");
     }
 

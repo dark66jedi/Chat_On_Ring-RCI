@@ -7,7 +7,6 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
-#define max(A, B) ((A) >= (B) ? (A) : (B))
 
 #ifndef GLOBAL_VARIABLES_H_
 #define GLOBAL_VARIABLES_H_
@@ -51,6 +50,7 @@ typedef struct node
   int succ_fd;
   int chord_fd;
   /*********************************************/
+
 
   char routing_table[16][16][50];   // tabela de encaminhamento do próprio nó
   char short_paths_table[16][50];   // tabela de caminhos mais curtos do próprio nó

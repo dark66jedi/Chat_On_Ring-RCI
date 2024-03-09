@@ -7,7 +7,6 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
-#define max(A, B) ((A) >= (B) ? (A) : (B))
 
 #include "udp_functions.h"
 #include "tcp_functions.h"
@@ -47,7 +46,7 @@ int main(int argc, char *argv[])
 
     n->chord_bool = 0;
     n->ring_bool = 0;
-  
+    Interface(n);
     impl_select(n);
   }
   else

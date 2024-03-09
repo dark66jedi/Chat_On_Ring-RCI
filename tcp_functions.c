@@ -1,33 +1,37 @@
 #include "tcp_functions.h"
 
-void TCP_Client(char connectIP[], char connectTCP[], char mensagem[])
+void TCP_Client(char connectIP[], char connectTCP[], char mensagem[], int sock_created, int fd)
 // Enviar mensagens
 {
-  int fd, errcode;
+  int errcode;
   ssize_t n;
   struct addrinfo hints, *res;
   ssize_t nbytes, nleft, nwritten;
   char *ptr, buffer[128 + 1];
+  if (sock_created != 1)
+  {
+    //fprintf(stdout, "soube entrar no if");
+    memset(buffer, '\0', sizeof(buffer));
+    fd = socket(AF_INET, SOCK_STREAM, 0); // TCP socket
+    if (fd == -1)
+    {
+      printf("Erro fd");
+      exit(1);
+    }
+    memset(&hints, 0, sizeof hints);
+    hints.ai_family = AF_INET;       // IPv4
+    hints.ai_socktype = SOCK_STREAM; // TCP socket
+    // printf("dentro do client: %s %s", connectIP, connectTCP);
+    errcode = getaddrinfo(connectIP, connectTCP, &hints, &res);
+    if (errcode != 0)
+    {
+      printf("Erro errcode"); // ERRO AQUI
+      exit(1);
+    }
+  }
 
-  memset(buffer, '\0', sizeof(buffer));
-  fd = socket(AF_INET, SOCK_STREAM, 0); // TCP socket
-  if (fd == -1)
-  {
-    printf("Erro fd");
-    exit(1);
-  }
-  memset(&hints, 0, sizeof hints);
-  hints.ai_family = AF_INET;       // IPv4
-  hints.ai_socktype = SOCK_STREAM; // TCP socket
-  //printf("dentro do client: %s %s", connectIP, connectTCP);
-  errcode = getaddrinfo(connectIP, connectTCP, &hints, &res);
-  if (errcode != 0)
-  {
-    printf("Erro errcode"); //ERRO AQUI
-    exit(1);
-  }
-  //printf("\nconnectIP: %s", connectIP);
-  //printf("\nconnectTCP: %s\n", connectTCP);
+   //printf("\nconnectIP: %s", connectIP);
+   //printf("\nconnectTCP: %s\n", connectTCP);
   n = connect(fd, res->ai_addr, res->ai_addrlen);
   if (n == -1)
   {
@@ -49,9 +53,10 @@ void TCP_Client(char connectIP[], char connectTCP[], char mensagem[])
     nleft -= nwritten;
     ptr += nwritten;
   }
-  //freeaddrinfo(res); // não posso fazer já, tenho de manter a comunicação aberta
- // close(fd);         // não posso fazer já, tenho de mandter a comunicação aberta
-  return ;
+  //printf("mensagem tcp enviada: %s\n", mensagem);
+  // freeaddrinfo(res); // não posso fazer já, tenho de manter a comunicação aberta
+  // close(fd);         // não posso fazer já, tenho de mandter a comunicação aberta
+  return;
 }
 
 void TCP_Server()
@@ -73,8 +78,8 @@ void TCP_Server()
   hints.ai_family = AF_INET;       // IPv4
   hints.ai_socktype = SOCK_STREAM; // TCP socket
   hints.ai_flags = AI_PASSIVE;
-  errcode = getaddrinfo(NULL, "58001", &hints, &res);           // O 58001 NÃO PODE FICAR ASSIM 
-  if ((errcode) != 0) /*error*/
+  errcode = getaddrinfo(NULL, "58001", &hints, &res); // O 58001 NÃO PODE FICAR ASSIM
+  if ((errcode) != 0)                                 /*error*/
     exit(1);
   n = bind(fd, res->ai_addr, res->ai_addrlen);
   if (n == -1) /*error*/
@@ -95,9 +100,9 @@ void TCP_Server()
     n = write(newfd, buffer, n);
     if (n == -1) /*error*/
       exit(1);
-    //close(newfd);
+    // close(newfd);
   }
-  return ;
-  //freeaddrinfo(res);
- // close(fd);
+  return;
+  // freeaddrinfo(res);
+  // close(fd);
 }
