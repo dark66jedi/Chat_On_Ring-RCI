@@ -46,7 +46,7 @@ typedef struct node
   int chord_bool;                   // boleano se ainda não foi criada uma corda está a 0 senão está a 1
   
   /* file descriptors necessários para o select*/
-  int listen_fd;
+ // int listen_fd; não é especifico de cada nó, não me faz sentido que exista
   int pred_fd;
   int succ_fd;
   int chord_fd;

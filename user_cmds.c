@@ -7,12 +7,11 @@ void join(char ring[], node *n)
     char answer[500];
     char connectid[3], connectIP[50], connectTCP[10];
     int new = 0;
-    // int i = 0;
 
     NODES(ring, answer);
     char *after = DeleteMethod(answer);
-    if (strcmp(after, "\0") == 0)
-    { // caso em que não há ainda nós no anel
+    if (strcmp(after, "\0") == 0) // caso em que não há ainda nós no anel
+    { 
         REG(ring, answer, n);
         if (strcmp(answer, "OKREG") != 0)
         {
@@ -41,7 +40,7 @@ void join(char ring[], node *n)
         5. implement select
         */
         sscanf(after, "%s %s %s", connectid, connectIP, connectTCP); // escolher o primeiro nó na lista, para ser esse a que se liga
-        if (strcmp(connectid, n->self) == 0)
+        if (strcmp(connectid, n->self) == 0) //só está para 2 nós, caso em que já existe esse id
         {
             new = atoi(n->self);
             new = new + 1;
@@ -69,17 +68,36 @@ void join(char ring[], node *n)
         }
         n->ring_bool = 1;
     }
+}
 
-    /*
-    1.CONECÇÃO UDP NODES feito
-   2. Receber NODeslist e escolher um (até pode ser o primeiro) Feito
-   3.ENTRY TCP
-   4. SUCC TCP
-   5. SUCC TCP
-   6. PRED
-   7. reg
-   8. OKAYREG
-    */
+void direct_join(char ring[], node *n, char buffer[]){
+    
+    char modo[15], modo2[15];
+    char id[3];
+    char succid[3], succIP[30], succTCP[10];
+
+    sscanf(buffer, "%s %s %s %s", id, succid, succIP, succTCP);
+    printf("Scanned : %s, TCP: %s/n",succIP, succTCP);
+    if(strcmp(id,succid)==0){
+        strcpy(n->succ, n->self);
+        strcpy(n->succ_IP, n->self_IP);
+        strcpy(n->succ_TCP, n->self_TCP);
+        strcpy(n->pred, n->self);
+        strcpy(n->pred_IP, n->self_IP);
+        strcpy(n->pred_TCP, n->self_TCP);
+        strcpy(n->succ_two, n->self);
+        strcpy(n->succ_two_IP, n->self_IP);
+        strcpy(n->succ_two_TCP, n->self_TCP);
+        n->ring_bool = 1;
+    } else{
+        printf("Enviei IP: %s, TCP: %s/n",succIP, succTCP);
+        ENTRY(succIP, succTCP, n);
+        // sucessor
+        strcpy(n->succ, succid);
+        strcpy(n->succ_IP, succIP);
+        strcpy(n->succ_TCP, succTCP); 
+        n->ring_bool = 1;
+    }
 }
 
 void show_topology(node *node, int chord_bool)

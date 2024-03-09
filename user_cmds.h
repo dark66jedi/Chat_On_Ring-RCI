@@ -8,6 +8,7 @@
 #define _USER_COMMANDS_H
 
 void join(char ring[], node *n);
+void direct_join(char ring[], node *n, char buffer[]);
 void show_topology(node *node, int chord_bool);
 
 #endif

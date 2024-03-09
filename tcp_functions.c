@@ -19,10 +19,11 @@ void TCP_Client(char connectIP[], char connectTCP[], char mensagem[])
   memset(&hints, 0, sizeof hints);
   hints.ai_family = AF_INET;       // IPv4
   hints.ai_socktype = SOCK_STREAM; // TCP socket
+  printf("dentro do client: %s %s", connectIP, connectTCP);
   errcode = getaddrinfo(connectIP, connectTCP, &hints, &res);
   if (errcode != 0)
   {
-    printf("Erro errcode");
+    printf("Erro errcode"); //ERRO AQUI
     exit(1);
   }
   //printf("\nconnectIP: %s", connectIP);
@@ -48,9 +49,9 @@ void TCP_Client(char connectIP[], char connectTCP[], char mensagem[])
     nleft -= nwritten;
     ptr += nwritten;
   }
-  freeaddrinfo(res); // não posso fazer já, tenho de manter a comunicação aberta
-  close(fd);         // não posso fazer já, tenho de mandter a comunicação aberta
-  return;
+  //freeaddrinfo(res); // não posso fazer já, tenho de manter a comunicação aberta
+ // close(fd);         // não posso fazer já, tenho de mandter a comunicação aberta
+  return ;
 }
 
 void TCP_Server()
@@ -94,8 +95,9 @@ void TCP_Server()
     n = write(newfd, buffer, n);
     if (n == -1) /*error*/
       exit(1);
-    close(newfd);
+    //close(newfd);
   }
-  freeaddrinfo(res);
-  close(fd);
+  return ;
+  //freeaddrinfo(res);
+ // close(fd);
 }

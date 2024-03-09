@@ -19,12 +19,13 @@ void Interface(node *node)
     {
       fprintf(stdout, "\n \u2022 remove chord (rc) - Eliminação da corda");
     }
-    fprintf(stdout, "\n \u2022 show topology (st) - Mostra o estado do protocolo topológico");
+    fprintf(stdout, "\n \u2022 2ª interface"); //só para não aparecer uma mancha tão grande no código enquanto testo
+    /*fprintf(stdout, "\n \u2022 show topology (st) - Mostra o estado do protocolo topológico");
     fprintf(stdout, "\n \u2022 show routing (sr) dest - Mostra a entrada da tabela de encaminhamento para o nó dest");
     fprintf(stdout, "\n \u2022 show path (sp) dest - Mostra o caminho mais curto para o nó dest");
     fprintf(stdout, "\n \u2022 show forwarding (sf) - Mostra a tabela de expedição do próprio nó");
     fprintf(stdout, "\n \u2022 message (m) dest message - Envio da mensagem message para o nó dest");
-    fprintf(stdout, "\n \u2022 leave (l) - Saída do nó do anel");
+    fprintf(stdout, "\n \u2022 leave (l) - Saída do nó do anel");*/
   }
 
   fprintf(stdout, "\n \u2022 exit (x) - Fecho do programa");
