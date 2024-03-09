@@ -77,7 +77,7 @@ void direct_join(char ring[], node *n, char buffer[]){
     char succid[3], succIP[30], succTCP[10];
 
     sscanf(buffer, "%s %s %s %s", id, succid, succIP, succTCP);
-    printf("Scanned : %s, TCP: %s/n",succIP, succTCP);
+    //printf("Scanned : %s, TCP: %s/n",succIP, succTCP);
     if(strcmp(id,succid)==0){
         strcpy(n->succ, n->self);
         strcpy(n->succ_IP, n->self_IP);
@@ -90,7 +90,7 @@ void direct_join(char ring[], node *n, char buffer[]){
         strcpy(n->succ_two_TCP, n->self_TCP);
         n->ring_bool = 1;
     } else{
-        printf("Enviei IP: %s, TCP: %s/n",succIP, succTCP);
+       // printf("Enviei IP: %s, TCP: %s/n",succIP, succTCP);
         ENTRY(succIP, succTCP, n);
         // sucessor
         strcpy(n->succ, succid);

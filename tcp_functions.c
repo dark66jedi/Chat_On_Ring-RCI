@@ -19,7 +19,7 @@ void TCP_Client(char connectIP[], char connectTCP[], char mensagem[])
   memset(&hints, 0, sizeof hints);
   hints.ai_family = AF_INET;       // IPv4
   hints.ai_socktype = SOCK_STREAM; // TCP socket
-  printf("dentro do client: %s %s", connectIP, connectTCP);
+  //printf("dentro do client: %s %s", connectIP, connectTCP);
   errcode = getaddrinfo(connectIP, connectTCP, &hints, &res);
   if (errcode != 0)
   {

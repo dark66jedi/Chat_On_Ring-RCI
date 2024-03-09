@@ -49,7 +49,7 @@ void ENTRY_not_me(char connectIP[], char connectTCP[], node *node, char aux_id[]
     strcat(msg_to_send, " ");
     strcat(msg_to_send, aux_TCP);
     strcat(msg_to_send, "\n");
-    printf("Enviei ENTRY not me: %s", msg_to_send);
+    //printf("Enviei ENTRY not me: %s", msg_to_send);
 
     TCP_Client(connectIP, connectTCP, msg_to_send);
 }
@@ -64,7 +64,7 @@ void ENTRY(char connectIP[], char connectTCP[], node *node)
     strcat(msg_to_send, " ");
     strcat(msg_to_send, node->self_TCP);
     strcat(msg_to_send, "\n");
-    printf("Enviei ENTRY: %s", msg_to_send);
+    //printf("Enviei ENTRY: %s", msg_to_send);
 
     TCP_Client(connectIP, connectTCP, msg_to_send);
 }
@@ -80,7 +80,7 @@ void PRED(char connectIP[], char connectTCP[], node *node)
     
     strcat(msg_to_send, node->self);
     strcat(msg_to_send, "\n");
-    printf("Enviei PRED: %s", msg_to_send);
+    //printf("Enviei PRED: %s", msg_to_send);
 
     TCP_Client(connectIP, connectTCP, msg_to_send);
 }
@@ -95,7 +95,7 @@ void SUCC(char connectIP[], char connectTCP[], node *node)
     strcat(msg_to_send, " ");
     strcat(msg_to_send, node->succ_TCP);
     strcat(msg_to_send, "\n");
-    printf("Enviei SUCC: %s", msg_to_send);
+    //printf("Enviei SUCC: %s", msg_to_send);
 
     TCP_Client(connectIP, connectTCP, msg_to_send);
 }

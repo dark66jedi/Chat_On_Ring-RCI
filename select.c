@@ -95,7 +95,7 @@ void impl_select(node *node)
           exit(1);
         }
         // identificar o protocolo recebido
-        printf("Recebi de novo");
+        //printf("Recebi de novo");
         choose_received_protocol(node, buffer, newfd);
         break; //necessário para parar o while se não eles mesmo depois de tudo continua aqui e não deixa ler mais coisas do terminal
       }
@@ -385,7 +385,7 @@ void choose_received_protocol(node *node, char buffer[], int fd)
   {
     //receive_ENTRY(); //porquê esta função e não fazer tudo aqui? É que se não estou só a enviar mais coisas para lá
     if(fd = node->succ_fd){
-      printf("Recebi um entry");
+      //printf("Recebi um entry");
       sscanf(buffer, "%s %s %s %s", protocol, aux_id, aux_IP, aux_TCP);
       PRED(aux_IP, aux_TCP, node); 
       strcpy(node->succ_two, node->succ);
@@ -420,15 +420,15 @@ void choose_received_protocol(node *node, char buffer[], int fd)
     // sscanf(buffer, "%s %s %s %s", protocol, node->pred, node->pred_IP, node->pred_TCP);
   }
   if (strcmp(protocol, "SUCC") == 0){
-    printf("Recebi o SUCC");
+    //printf("Recebi o SUCC");
     sscanf(buffer, "%s %s %s %s", protocol, aux_id, aux_IP, aux_TCP);
     strcpy(node->succ_two, aux_id);
     strcpy(node->succ_two_IP, aux_IP);
     strcpy(node->succ_two_TCP, aux_TCP);
-    printf("2º sucessor: %s %s %s", node->succ_two, node->succ_two_IP, node->succ_two_TCP);
+    //printf("2º sucessor: %s %s %s", node->succ_two, node->succ_two_IP, node->succ_two_TCP);
   }
   if (strcmp(protocol, "PRED") == 0){
-    printf("Recebi o PRED");
+    //printf("Recebi o PRED");
     sscanf(buffer, "%s %s", protocol, aux_id);
     strcpy(node->pred, aux_id);
     node->pred_fd = fd;
