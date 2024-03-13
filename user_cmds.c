@@ -7,6 +7,20 @@ typedef struct nodeslist
     char TCP[30];
 } nodeslist;
 
+void leave(char ring[], node *n){
+    char answer[500];
+
+    UNREG(ring, answer, n);
+    if (strcmp(answer, "OKUNREG") != 0)
+    {
+        printf("Erro na saída do nó do servidor de nós");
+        exit(1);
+    }
+
+    //close(node->pred_fd_send);
+    //close(node->succ_fd_send);
+}
+
 void join(char ring[], node *n)
 {
     char mensagemUDP[50];
@@ -17,6 +31,7 @@ void join(char ring[], node *n)
     char aux_id[3], aux_IP[50], aux_TCP[30];
     int new = 0;
     int i = 0, j =0;
+    int fd = 0;
 
     NODES(ring, answer);
     char *after = DeleteMethod(answer);
@@ -53,7 +68,7 @@ void join(char ring[], node *n)
             strcpy(list[i].TCP, aux_TCP);
             after = DeleteMethod(after);
             i++;
-            if (*after == '\0')
+            if (*after == '\0') //acho que não está aqui a fazer nada
             {
                 break;
             }
@@ -88,13 +103,15 @@ void join(char ring[], node *n)
         }
 
         // ENTRY para o sucessor
-        ENTRY(connectIP, connectTCP, n);
+        fd = ENTRY(connectIP, connectTCP, n);
+        printf("A fd que criei é: %d\n", fd);
         // sucessor
         strcpy(n->succ, connectid);
         strcpy(n->succ_IP, connectIP);
         strcpy(n->succ_TCP, connectTCP);
+        n->succ_fd = fd; 
         // registar servidor de nós
-        REG(ring, answer, n);
+        REG(ring, answer, n); //só devia fazer isto se o resto der certo?
         if (strcmp(answer, "OKREG") != 0)
         {
             printf("Erro no registo do nó no anel");
@@ -110,6 +127,7 @@ void direct_join(char ring[], node *n, char buffer[])
     char modo[15], modo2[15];
     char id[3];
     char succid[3], succIP[30], succTCP[10];
+    int fd = 0;
 
     sscanf(buffer, "%s %s %s %s", id, succid, succIP, succTCP);
     // printf("Scanned : %s, TCP: %s/n",succIP, succTCP);
@@ -129,11 +147,12 @@ void direct_join(char ring[], node *n, char buffer[])
     else
     {
         // printf("Enviei IP: %s, TCP: %s/n",succIP, succTCP);
-        ENTRY(succIP, succTCP, n);
+        fd = ENTRY(succIP, succTCP, n);
         // sucessor
         strcpy(n->succ, succid);
         strcpy(n->succ_IP, succIP);
         strcpy(n->succ_TCP, succTCP);
+        n->succ_fd = fd;
         n->ring_bool = 1;
     }
 }

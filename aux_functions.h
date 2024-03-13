@@ -6,6 +6,7 @@
 void Interface(node *node);
 char *DeleteMethod(char *string);
 char *DeleteMethod_space(char *string);
+char *find_next_protocol(char *buffer);
 int max(int x, int y, int z, int j);
 
 #endif

@@ -1,16 +1,17 @@
 #include "tcp_functions.h"
 
-void TCP_Client(char connectIP[], char connectTCP[], char mensagem[], int sock_created, int fd)
+int TCP_Client(char connectIP[], char connectTCP[], char mensagem[], int sock_created, int fd)
 // Enviar mensagens
 {
   int errcode;
   ssize_t n;
   struct addrinfo hints, *res;
   ssize_t nbytes, nleft, nwritten;
-  char *ptr, buffer[128 + 1];
+  char *ptr, buffer[128];
+  //fprintf(stdout, "Entrei no TCP\n");
   if (sock_created != 1)
   {
-    //fprintf(stdout, "soube entrar no if");
+    // fprintf(stdout, "soube entrar no if");
     memset(buffer, '\0', sizeof(buffer));
     fd = socket(AF_INET, SOCK_STREAM, 0); // TCP socket
     if (fd == -1)
@@ -18,33 +19,38 @@ void TCP_Client(char connectIP[], char connectTCP[], char mensagem[], int sock_c
       printf("Erro fd");
       exit(1);
     }
-  }
-  //fprintf(stdout,"socket no tcp client: %d", fd);
-  memset(&hints, 0, sizeof hints);
-  hints.ai_family = AF_INET;       // IPv4
-  hints.ai_socktype = SOCK_STREAM; // TCP socket
-  // printf("dentro do client: %s %s", connectIP, connectTCP);
-  errcode = getaddrinfo(connectIP, connectTCP, &hints, &res);
-  if (errcode != 0)
-  {
-    printf("Erro errcode"); // ERRO AQUI
-    exit(1);
+
+    memset(&hints, 0, sizeof hints);
+    hints.ai_family = AF_INET;       // IPv4
+    hints.ai_socktype = SOCK_STREAM; // TCP socket
+    // printf("dentro do client: %s %s", connectIP, connectTCP);
+    errcode = getaddrinfo(connectIP, connectTCP, &hints, &res);
+    if (errcode != 0)
+    {
+      printf("Erro errcode"); // ERRO AQUI
+      //return 9; -> utilizei para poder fazer st e ver o que não é feito
+      exit(1);
+    }
+
+    // printf("\nconnectIP: %s", connectIP);
+    // printf("\nconnectTCP: %s\n", connectTCP);
+    n = connect(fd, res->ai_addr, res->ai_addrlen);
+    if (n == -1)
+    {
+      printf("Erro no connect"); // pode ser por outra comunicação já estar a ser feito nessa socket?
+      exit(1);
+    }
   }
 
-    printf("\nconnectIP: %s", connectIP);
-   //printf("\nconnectTCP: %s\n", connectTCP);
-  n = connect(fd, res->ai_addr, res->ai_addrlen);
-  if (n == -1)
-  {
-    printf("Erro no connect"); //pode ser por outra comunicação já estar a ser feito nessa socket?
-    exit(1);
-  }
+  //fprintf(stdout, "A fd para onde está a ser enviado está a ser: %d", fd);
 
   ptr = strcpy(buffer, mensagem);
-  nbytes = strlen(buffer);
-  nleft = nbytes;
+  nbytes = strlen(mensagem);
+  nleft = nbytes; //Confirmar isto para não enviar o \0 -> Não, quando envias uma mensagem, não é para enviares um '\0' no final (ou seja, write(fd, "PRED 00\n", 8) está certo e write(fd, "PRED 00\n", 9) está errado)
+  
   while (nleft > 0)
   {
+    //fprintf(stdout, "Entro num loop");
     nwritten = write(fd, ptr, nleft);
     if (nwritten <= 0)
     {
@@ -54,10 +60,11 @@ void TCP_Client(char connectIP[], char connectTCP[], char mensagem[], int sock_c
     nleft -= nwritten;
     ptr += nwritten;
   }
-  //printf("mensagem tcp enviada: %s\n", mensagem);
-  // freeaddrinfo(res); // não posso fazer já, tenho de manter a comunicação aberta
-  // close(fd);         // não posso fazer já, tenho de mandter a comunicação aberta
-  return;
+  // printf("mensagem tcp enviada: %s\n", mensagem);
+  //  freeaddrinfo(res); // não posso fazer já, tenho de manter a comunicação aberta
+  //  close(fd);         // não posso fazer já, tenho de mandter a comunicação aberta
+  //fprintf(stdout, "Sai do TCP");
+  return fd;
 }
 
 void TCP_Server()

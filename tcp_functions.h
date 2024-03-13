@@ -11,7 +11,7 @@
 #ifndef _TCP_H
 #define _TCP_H
 
-void TCP_Client(char connectIP[], char connectTCP[], char mensagem[], int sock_created, int fd);
+int TCP_Client(char connectIP[], char connectTCP[], char mensagem[], int sock_created, int fd);
 void TCP_Server();
 
 #endif

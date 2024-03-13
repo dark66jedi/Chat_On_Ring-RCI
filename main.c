@@ -23,7 +23,6 @@ char TCP_global[10];
 
 int main(int argc, char *argv[])
 {
-
   char readInter[128];
   node *n = malloc(sizeof(node));
 

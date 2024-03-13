@@ -48,6 +48,17 @@ char *DeleteMethod_space(char *string)
       return p + 1;
 }
 
+char *find_next_protocol(char *buffer) {
+    char *newline_ptr = strchr(buffer, '\n');
+    if (newline_ptr != NULL) {
+        *newline_ptr = '\0';  // Replace newline with null terminator
+        return newline_ptr + 1;  // Return pointer to the next message
+    } else {
+        return NULL;  // No more messages found
+    }
+}
+
+
 int max(int x, int y, int z, int j)
 {
     int highest = x;
