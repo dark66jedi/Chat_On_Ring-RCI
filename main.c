@@ -47,6 +47,7 @@ int main(int argc, char *argv[])
     n->ring_bool = 0;
     Interface(n);
     impl_select(n);
+    
   }
   else
   {

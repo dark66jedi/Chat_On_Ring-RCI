@@ -11,6 +11,9 @@ void ENTRY_not_me(char connectIP[], char connectTCP[], node *node, char aux_id[]
 int PRED(char connectIP[], char connectTCP[], node *node, int sock_created);
 int SUCC(char connectIP[], char connectTCP[], node *node, int sock_created);
 void CHORD(char connectIP[], char connectTCP[], node *node);
+void ROUTE(node *node, char target_node[]);
 void receive_ENTRY();
+void receive_ROUTE(node *node);
+void initialize_tables(node *node);
 
 #endif
