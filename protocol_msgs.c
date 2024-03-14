@@ -97,7 +97,8 @@ int PRED(char connectIP[], char connectTCP[], node *node, int sock_created)
     return fd;
 }
 
-int SUCC(char connectIP[], char connectTCP[], node *node, int sock_created)
+void SUCC(char connectIP[], char connectTCP[], node *node, int sock_created)
+//tecnicamente não preciso aqui do sock_created, acho
 {
     char msg_to_send[100];
     int fd = 0;
@@ -107,15 +108,16 @@ int SUCC(char connectIP[], char connectTCP[], node *node, int sock_created)
    // fprintf(stdout, "node->pred_fd_send %i\n", node->pred_fd_send);
 //    fprintf(stdout, "node->self %s\n", node->self);
 
-    if(strcmp(node->succ_two, node->self) == 0){ //caso de dois nós
+    fd = TCP_Client(connectIP, connectTCP, msg_to_send, 1, node->pred_fd);
+
+   /* if(strcmp(node->succ_two, node->self) == 0){ //caso de dois nós
       // fprintf(stdout, "Estou a enviar o succ certo\n");
        // fprintf(stdout, "fd a enviar:%d\n", node->pred_fd_send);
         fd = TCP_Client(connectIP, connectTCP, msg_to_send, 1, node->pred_fd);
     } else{
         fd = TCP_Client(connectIP, connectTCP, msg_to_send, 1, node->pred_fd);
         fprintf(stdout, "Estou a enviar certo! fd a enviar:%d\n", node->pred_fd);
-    }
-    return fd;
+    }*/
     /*if(sock_created==0){
         fd = TCP_Client(connectIP, connectTCP, msg_to_send, sock_created, 0); //não existe ainda, logo vai criar
     } else{
@@ -123,7 +125,7 @@ int SUCC(char connectIP[], char connectTCP[], node *node, int sock_created)
         fprintf(stdout, "fd: %i\n", fd);
     }*/
 
-    return fd;
+    return;
 }
 
 void CHORD(char connectIP[], char connectTCP[], node *node)
