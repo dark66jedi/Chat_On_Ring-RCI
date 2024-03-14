@@ -7,16 +7,16 @@ typedef struct nodeslist
     char TCP[30];
 } nodeslist;
 
-void leave(char ring[], node *n){
+void leave(node *n){
     char answer[500];
 
-    UNREG(ring, answer, n);
+    UNREG(n->ring, answer, n);
     if (strcmp(answer, "OKUNREG") != 0)
     {
         printf("Erro na saída do nó do servidor de nós");
         exit(1);
     }
-
+    return;
     //close(node->pred_fd_send);
     //close(node->succ_fd_send);
 }

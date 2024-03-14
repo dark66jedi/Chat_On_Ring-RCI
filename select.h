@@ -4,7 +4,7 @@
 #include "global_variables.h"
 
 void impl_select(node *node);
-void choose_terminal_cmd(node *node);
+void choose_terminal_cmd(node *node, char readInter[]);
 void choose_received_protocol(node *node, char buffer[], int fd);
 void SUCC_Received(char aux_id[], char aux_IP[], char aux_TCP[], node *node, int fd);
 void ENTRY_Received(char aux_id[], char aux_IP[], char aux_TCP[], node *node, int fd);
