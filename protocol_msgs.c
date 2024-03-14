@@ -132,7 +132,40 @@ void CHORD(char connectIP[], char connectTCP[], node *node)
     char msg_to_send[100];
     int fd = 0;
     
-   sprintf(msg_to_send,"CHORD %s\n",node->self);
+    sprintf(msg_to_send,"CHORD %s\n",node->self);
 
     fd = TCP_Client(connectIP, connectTCP, msg_to_send, 0, 0); //ver ainda os 0s
+}
+
+void ROUTE(node *node, char target_node[])
+{
+    char base_msg[100] = "ROUTE ";
+    strcat(base_msg, node->self);
+    strcat(base_msg, " ");
+
+    for (size_t i = 0; i < MAX_N_NODES; i++)
+    {
+        strcat(base_msg, node->table_indexes[i]);
+        strcat(base_msg, " ");
+        strcat(base_msg, node->short_paths_table[i]);
+        // TCP_Client(NULL, NULL, base_msg, dest_socket, fd);
+    }
+    
+}
+
+void receive_ROUTE(node *node)
+{
+
+}
+
+void initialize_tables(node *node)
+{
+    int i, k;
+    for (i = 0; i <= MAX_N_NODES; i++)
+    {
+        for (k = 0; k <= MAX_N_NODES; k++)
+        {
+            strcpy(node->routing_table[i][k], node->self);
+        }
+    }
 }

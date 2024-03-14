@@ -44,6 +44,9 @@ void join(char ring[], node *n)
             printf("Erro no registo do nó no anel");
             exit(1);
         }
+
+        initialize_tables(n);
+
         strcpy(n->succ, n->self);
         strcpy(n->succ_IP, n->self_IP);
         strcpy(n->succ_TCP, n->self_TCP);
@@ -101,6 +104,7 @@ void join(char ring[], node *n)
                 j = i;
             }
         }
+        initialize_tables(n);
 
         // ENTRY para o sucessor
         fd = ENTRY(connectIP, connectTCP, n);
@@ -196,4 +200,9 @@ void show_topology(node *node, int chord_bool)
     }
 
     printf("\n================================================\n\n");
+}
+
+void show_routing(node *node)
+{
+
 }

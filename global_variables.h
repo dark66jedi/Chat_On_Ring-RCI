@@ -24,6 +24,8 @@ EXTERN char regUDP[];
 EXTERN char IP_global[];
 EXTERN char TCP_global[];
 
+#define MAX_N_NODES 15
+
 typedef struct node
 {
   char ring[4];
@@ -54,10 +56,10 @@ typedef struct node
   /*********************************************/
 
 
-  char routing_table[16][16][50];   // tabela de encaminhamento do próprio nó
-  char short_paths_table[16][50];   // tabela de caminhos mais curtos do próprio nó
-  char expedition_table[16][3];     // tabela de expedição do próprio nó
-  int table_indexes[16];       // vetor que identifica o indice atribuido a cada id de um nó (ex.: o id do nó pode ser 50 mas o indice é 2)
+  char routing_table[15][15][50];   // tabela de encaminhamento do próprio nó
+  char short_paths_table[15][50];   // tabela de caminhos mais curtos do próprio nó
+  char expedition_table[15][3];     // tabela de expedição do próprio nó
+  char table_indexes[15][50];       // vetor que identifica o indice atribuido a cada id de um nó (ex.: o id do nó pode ser 50 mas o indice é 2)
 } node;
 
 // EXTERN node self_node;

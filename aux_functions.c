@@ -74,3 +74,33 @@ int max(int x, int y, int z, int j)
     }
     return highest;
 }
+
+int search_index(node *node, char node_id[])
+{
+  for (size_t i = 0; i <= MAX_N_NODES; i++)
+  {
+    if(strcmp(node_id, node->table_indexes[i]) == 0) break;
+  }
+}
+
+void invert_order(char path[])
+{
+  char result[50] = "";
+  int i = strlen(path), result_i = 0;
+
+  while(i>0)
+  {
+    result[result_i] = path[i-2];
+    result_i++;
+    result[result_i] = path[i-1];
+    result_i++;
+
+    if (i<3) break;
+    
+    result[result_i] = '-';
+    result_i++;
+
+    i = i - 3;
+  }
+  strcpy(path,result);
+}
