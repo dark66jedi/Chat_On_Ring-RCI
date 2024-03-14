@@ -59,7 +59,7 @@ void join(char ring[], node *n)
     {
         // Falta comparar IPs e porto? 
         sscanf(after, "%s %s %s", connectid, connectIP, connectTCP); // escolher o primeiro nó na lista, para ser esse a que se liga
-        //fprintf(stdout,"a quem em estou a conectar? %s %s %s \n", connectid, connectIP, connectTCP);
+        fprintf(stdout,"a quem em estou a conectar? %s %s %s \n", connectid, connectIP, connectTCP);
         while (*after != '\0') // guardar nodes list para comparar
         {
             sscanf(after, "%s %s %s", aux_id, aux_IP, aux_TCP);
@@ -104,7 +104,7 @@ void join(char ring[], node *n)
 
         // ENTRY para o sucessor
         fd = ENTRY(connectIP, connectTCP, n);
-        printf("A fd que criei é: %d\n", fd);
+        fprintf(stdout,"A fd que criei é: %d\n", fd);
         // sucessor
         strcpy(n->succ, connectid);
         strcpy(n->succ_IP, connectIP);
