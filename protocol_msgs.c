@@ -93,8 +93,7 @@ int PRED(char connectIP[], char connectTCP[], node *node, int sock_created)
     return fd;
 }
 
-void SUCC(char connectIP[], char connectTCP[], node *node, int sock_created)
-//tecnicamente não preciso aqui do sock_created, acho
+int SUCC(char connectIP[], char connectTCP[], node *node, int sock_created)
 {
     char msg_to_send[100];
     int fd = 0;
@@ -121,7 +120,7 @@ void SUCC(char connectIP[], char connectTCP[], node *node, int sock_created)
         fprintf(stdout, "fd: %i\n", fd);
     }*/
 
-    return;
+    return fd;
 }
 
 void CHORD(char connectIP[], char connectTCP[], node *node)

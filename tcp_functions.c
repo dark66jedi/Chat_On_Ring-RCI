@@ -8,7 +8,7 @@ int TCP_Client(char connectIP[], char connectTCP[], char mensagem[], int sock_cr
   struct addrinfo hints, *res;
   ssize_t nbytes, nleft, nwritten;
   char *ptr, buffer[128];
-  //fprintf(stdout, "Entrei no TCP\n");
+  fprintf(stdout, "Entrei no TCP\n");
   if (sock_created != 1)
   {
     // fprintf(stdout, "soube entrar no if");
