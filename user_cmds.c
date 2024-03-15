@@ -202,7 +202,20 @@ void show_topology(node *node, int chord_bool)
     printf("\n================================================\n\n");
 }
 
-void show_routing(node *node)
+void show_routing(node *node, char dest[])
 {
+    int dest_index = 0, pred_index = 0, succ_index = 0;
 
+    search_index(node, dest, dest_index);
+    search_index(node, node->pred, pred_index);
+    search_index(node, node->succ, succ_index);
+    
+    printf("\n================================================\n\n");
+
+    printf("Destino: %s\n", dest);
+    printf("\u2022Pelo vizinho %s: %s\n", node->pred, node->routing_table[dest_index][pred_index]);
+    printf("\u2022Pelo vizinho %s: %s\n", node->succ, node->routing_table[dest_index][succ_index]);
+    
+
+    printf("\n================================================\n\n");
 }

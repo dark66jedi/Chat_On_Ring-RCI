@@ -75,11 +75,15 @@ int max(int x, int y, int z, int j)
     return highest;
 }
 
-int search_index(node *node, char node_id[])
+void search_index(node *node, char node_id[], int index)
 {
-  for (size_t i = 0; i <= MAX_N_NODES; i++)
+  for (size_t i = 0; i < MAX_N_NODES; i++)
   {
-    if(strcmp(node_id, node->table_indexes[i]) == 0) break;
+    if(strcmp(node_id, node->table_indexes[i]) == 0)
+    {
+      index = i;
+      break;
+    }
   }
 }
 
@@ -103,4 +107,39 @@ void invert_order(char path[])
     i = i - 3;
   }
   strcpy(path,result);
+}
+
+void update_tables(node *node)
+{
+  // first update short paths table with routing table
+  char short_path[50] = "-";
+
+  for (size_t i = 0; i < MAX_N_NODES; i++)
+  {
+    for (size_t k = 0; k < MAX_N_NODES; k++)
+    {
+      if(strcmp(node->routing_table[i][k], "-") == 0) continue;
+      else
+      {
+        if (strlen(short_path) > strlen(node->routing_table[i][k]) || strcmp(short_path, "-") == 0)
+        {
+          strcpy(short_path, node->routing_table[i][k]);
+        }
+      }
+    }
+    strcpy(node->short_paths_table[i], short_path);
+  }
+
+  // then update expedition table with short paths table
+
+  for (size_t i = 0; i < MAX_N_NODES; i++)
+  {
+    if(strcmp(node->expedition_table[i], "-") == 0) continue;
+    else
+    {
+      node->expedition_table[i][0] = node->short_paths_table[i][3]
+      node->expedition_table[i][1] = node->short_paths_table[i][4]
+      node->expedition_table[i][2] = '\0'
+    }
+  }  
 }

@@ -6,6 +6,7 @@
 #include "protocol_msgs.h"
 #include "udp_functions.h"
 #include "tcp_functions.h"
+#include "aux_functions.h"
 
 void NODES(char ring[], char answer[])
 {
@@ -66,11 +67,6 @@ int ENTRY(char connectIP[], char connectTCP[], node *node)
 
     fd = TCP_Client(connectIP, connectTCP, msg_to_send, 0, 0);
     return fd;
-}
-
-void receive_ENTRY()
-{
-    printf("\n============| receive_ENTRY |============\n\n");
 }
 
 int PRED(char connectIP[], char connectTCP[], node *node, int sock_created)
@@ -138,35 +134,42 @@ void CHORD(char connectIP[], char connectTCP[], node *node)
     fd = TCP_Client(connectIP, connectTCP, msg_to_send, 0, 0); //ver ainda os 0s
 }
 
-void ROUTE(node *node, char target_node[])
+void ROUTE(node *node, char target_node[], int fd)
 {
-    char base_msg[100] = "ROUTE ";
-    strcat(base_msg, node->self);
-    strcat(base_msg, " ");
+    char msg_to_send[100] = "";
 
     for (size_t i = 0; i < MAX_N_NODES; i++)
     {
-        strcat(base_msg, node->table_indexes[i]);
-        strcat(base_msg, " ");
-        strcat(base_msg, node->short_paths_table[i]);
-        // TCP_Client(NULL, NULL, base_msg, dest_socket, fd);
+        if(strcmp(node->short_paths_table[i], "-") == 0) continue;
+        else
+        {
+            sprintf(msg_to_send, "ROUTE %s %s %s\n", node->self, node->table_indexes[i], node->short_paths_table[i]);
+            TCP_Client(NULL, NULL, msg_to_send, 1, fd);
+        }
+        
     }
-    
 }
 
-void receive_ROUTE(node *node)
+void ROUTE_Received(node *node, char origin_id[], char dest_id[], char path[])
 {
+    int origin_id_index, dest_id_index;
 
+    search_index(node, origin_id, origin_id_index);
+    search_index(node, dest_id, dest_id_index);
+
+    invert_order(path);
+
+    strcpy(node->expedition_table, path);
 }
 
 void initialize_tables(node *node)
 {
     int i, k;
-    for (i = 0; i <= MAX_N_NODES; i++)
+    for (i = 0; i < MAX_N_NODES; i++)
     {
-        for (k = 0; k <= MAX_N_NODES; k++)
+        for (k = 0; k < MAX_N_NODES; k++)
         {
-            strcpy(node->routing_table[i][k], node->self);
+            strcpy(node->routing_table[i][k], "-");
         }
     }
 }

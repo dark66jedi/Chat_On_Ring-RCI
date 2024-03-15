@@ -462,6 +462,7 @@ void choose_received_protocol(node *node, char buffer[], int fd)
   char aux_IP[50];
   char aux_TCP[10];
   char lixo[30];
+  char origin_id[3], dest_id[3], path[50];
 
   fprintf(stdout, "Recebi algo: %s\n", buffer);
   // fprintf(stdout,"tamanho %zu\n", strlen("\n"));
@@ -490,6 +491,11 @@ void choose_received_protocol(node *node, char buffer[], int fd)
     {
       sscanf(after, "%s %s", protocol, aux_id);
       CHORD_Received(aux_id, node, fd);
+    }
+    else if (strcmp(protocol, "ROUTE") == 0)
+    {
+      sscanf(after, "%s %s", protocol, origin_id, dest_id, path);
+      ROUTE_Received(node, origin_id, dest_id, path);
     }
     // after = find_next_protocol(after);
     /*if(strcmp(after, NULL)==0){
