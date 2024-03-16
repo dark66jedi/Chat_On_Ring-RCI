@@ -10,7 +10,7 @@ int ENTRY(char connectIP[], char connectTCP[], node *node);
 void ENTRY_not_me(char connectIP[], char connectTCP[], node *node, char aux_id[], char aux_IP[], char aux_TCP[]);
 int PRED(char connectIP[], char connectTCP[], node *node, int sock_created);
 int SUCC(char connectIP[], char connectTCP[], node *node, int sock_created);
-void CHORD(char connectIP[], char connectTCP[], node *node);
+int CHORD(char connectIP[], char connectTCP[], node *node);
 void ROUTE(node *node, char target_node[], int fd);
 void receive_ENTRY();
 void ROUTE_Received(node *node, char origin_id[], char dest_id[], char path[]);

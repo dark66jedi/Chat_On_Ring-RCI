@@ -123,14 +123,14 @@ int SUCC(char connectIP[], char connectTCP[], node *node, int sock_created)
     return fd;
 }
 
-void CHORD(char connectIP[], char connectTCP[], node *node)
+int CHORD(char connectIP[], char connectTCP[], node *node)
 {
     char msg_to_send[100];
     int fd = 0;
     
     sprintf(msg_to_send,"CHORD %s\n",node->self);
 
-    fd = TCP_Client(connectIP, connectTCP, msg_to_send, 0, 0); //ver ainda os 0s
+    fd = TCP_Client(connectIP, connectTCP, msg_to_send, 0, 0); 
 }
 
 void ROUTE(node *node, char target_node[], int fd)

@@ -10,5 +10,6 @@ char *find_next_protocol(char *buffer);
 int max(int x, int y, int z, int j);
 void search_index(node *node, char node_id[], int index);
 void invert_order(char path[]);
+void clean_node(node *node);
 
 #endif

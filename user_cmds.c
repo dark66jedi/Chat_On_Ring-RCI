@@ -51,8 +51,6 @@ void join(char ring[], node *n)
         strcpy(n->succ_IP, n->self_IP);
         strcpy(n->succ_TCP, n->self_TCP);
         strcpy(n->pred, n->self);
-        strcpy(n->pred_IP, n->self_IP);
-        strcpy(n->pred_TCP, n->self_TCP);
         strcpy(n->succ_two, n->self);
         strcpy(n->succ_two_IP, n->self_IP);
         strcpy(n->succ_two_TCP, n->self_TCP);
@@ -134,15 +132,13 @@ void direct_join(char ring[], node *n, char buffer[])
     int fd = 0;
 
     sscanf(buffer, "%s %s %s %s", id, succid, succIP, succTCP);
-    // printf("Scanned : %s, TCP: %s/n",succIP, succTCP);
+    fprintf(stdout, "Scanned : %s, TCP: %s/n",succIP, succTCP);
     if (strcmp(id, succid) == 0)
     {
         strcpy(n->succ, n->self);
         strcpy(n->succ_IP, n->self_IP);
         strcpy(n->succ_TCP, n->self_TCP);
         strcpy(n->pred, n->self);
-        strcpy(n->pred_IP, n->self_IP);
-        strcpy(n->pred_TCP, n->self_TCP);
         strcpy(n->succ_two, n->self);
         strcpy(n->succ_two_IP, n->self_IP);
         strcpy(n->succ_two_TCP, n->self_TCP);
@@ -158,7 +154,43 @@ void direct_join(char ring[], node *n, char buffer[])
         strcpy(n->succ_TCP, succTCP);
         n->succ_fd = fd;
         n->ring_bool = 1;
+        //fprintf(stdout,"Ring do anel: %s\n", n->ring);
     }
+}
+
+void chord(node *n, char buffer[]){
+    nodeslist list[16];
+    char answer[500];
+    char aux_id[3], aux_IP[50], aux_TCP[30];
+    int i = 0;
+
+    if (strcmp(n->succ_two,n->self) == 0 || strcmp(n->succ_two,n->pred) == 0){ //caso de só existir 1, 2 ou 3 aneis no anel
+        fprintf(stdout,"O anel tem 3 ou menos nós. Não existem nós com os quais é possível criar uma corda!");
+    } else{
+        NODES(n->ring, answer);
+        char *after = DeleteMethod(answer);
+        while (*after != '\0') // guardar nodes list para comparar
+        {
+            sscanf(after, "%s %s %s", aux_id, aux_IP, aux_TCP);
+            strcpy(list[i].id, aux_id);
+            strcpy(list[i].IP, aux_IP);
+            strcpy(list[i].TCP, aux_TCP);
+            after = DeleteMethod(after);
+            i++;
+            if (*after == '\0') //acho que não está aqui a fazer nada
+            {
+                break;
+            }
+        }
+        i=0;
+        while(strcmp(list[i].id,n->self) == 0 || strcmp(list[i].id,n->pred) == 0 || strcmp(list[i].id,n->succ) == 0){
+            i++;
+        }
+        n->chord_fd = CHORD(list->IP[i], list->TCP[i], n);
+        n->chord_bool = 1;
+        n->n_chords++;
+    }
+
 }
 
 void show_topology(node *node, int chord_bool)
@@ -183,8 +215,6 @@ void show_topology(node *node, int chord_bool)
 
     printf("\tSeu predecessor:\n");
     printf("\t\u2022 id: %s \n", node->pred);
-    printf("\t\u2022 IP: %s \n", node->pred_IP);
-    printf("\t\u2022 Porto: %s \n\n", node->pred_TCP);
 
     // AINDA POR FAZER
     if (chord_bool == 1)

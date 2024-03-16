@@ -7,7 +7,7 @@ void Interface(node *node)
   if (node->ring_bool == 0)
   {
     fprintf(stdout, "\n \u2022 join (j) ring id - Entrada de um nó no anel ring com identificador id");
-    fprintf(stdout, "\n \u2022 direct join (dj) ring id succid succIP succTCP - Entrada de um nó no anel ring com identificador id ao nó com parâmetros succid, succIP e succTCP");
+    fprintf(stdout, "\n \u2022 direct join (dj) id succid succid succIP succTCP - Entrada de um nó no anel ring com identificador id ao nó com parâmetros succid, succIP e succTCP");
   }
   else if (node->ring_bool == 1)
   {
@@ -56,6 +56,30 @@ char *find_next_protocol(char *buffer) {
     } else {
         return NULL;  // No more messages found
     }
+}
+
+void clean_node(node *node){
+  node->ring[0] = '\0';
+  node->self[0] = '\0' ;      
+  node->self_IP[0] = '\0';  
+  node->self_TCP[0] = '\0'; 
+  node->pred[0] = '\0';
+  node->succ[0] = '\0';
+  node->succ_IP[0] = '\0';
+  node->succ_TCP[0] = '\0';
+  node->succ_two[0] = '\0';
+  node->succ_two_IP[0] = '\0';
+  node->succ_two_TCP[0] = '\0';
+  node->chord[0] = '\0';
+  node->chord_IP[0] = '\0';
+  node->chord_TCP[0] = '\0';
+  node->pred_left_bool = 0;
+  node->ring_bool = 0;
+  node->chord_bool = 0;                  
+  node->n_chords = 0;                    
+  node->pred_fd = 0;
+  node->succ_fd = 0;
+  node->chord_fd = 0;
 }
 
 
@@ -137,9 +161,10 @@ void update_tables(node *node)
     if(strcmp(node->expedition_table[i], "-") == 0) continue;
     else
     {
-      node->expedition_table[i][0] = node->short_paths_table[i][3]
-      node->expedition_table[i][1] = node->short_paths_table[i][4]
-      node->expedition_table[i][2] = '\0'
+      node->expedition_table[i][0] = node->short_paths_table[i][3];
+      node->expedition_table[i][1] = node->short_paths_table[i][4];
+      node->expedition_table[i][2] = '\0';
     }
   }  
 }
+

@@ -45,13 +45,17 @@ int main(int argc, char *argv[])
 
     n->chord_bool = 0;
     n->ring_bool = 0;
-    Interface(n);
-    impl_select(n);
-    
+    while (1) // basicamente existe só para quando um nó dá leave, dar reset à aplicação mas sem fechar a aplicação
+    {
+      //ESCLARECER: Dar "leave" é basicamente como se voltássemos ao inicio da aplicação e tivéssemos de dar join/djoin de novo? Ou o nó mantém o seu id?
+      Interface(n);
+      impl_select(n);
+      fprintf(stdout,"Voltei aqui\n");
+    }
   }
   else
   {
-    printf("Erro na inicialização do programa\n"); //ADICIONAR sugestões de correção
+    printf("Erro na inicialização do programa\n"); // ADICIONAR sugestões de correção
   }
   return 0;
 }

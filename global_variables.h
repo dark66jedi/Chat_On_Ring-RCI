@@ -33,8 +33,6 @@ typedef struct node
   char self_IP[50];  // IP da máquina
   char self_TCP[10]; // porto
   char pred[3];
-  char pred_IP[50];
-  char pred_TCP[10];
   char succ[3];
   char succ_IP[50];
   char succ_TCP[10];
@@ -53,7 +51,7 @@ typedef struct node
  // int listen_fd; não é especifico de cada nó, não me faz sentido que exista
   int pred_fd;
   int succ_fd;
-  int chord_fd;
+  int chord_fd; //corda que EU criei
   /*********************************************/
 
 
