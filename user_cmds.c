@@ -200,6 +200,10 @@ void remove_chord(node *n){
     return;
 }
 
+void message(node *n, char dest[], char message[]){
+    CHAT(n,n->self,dest,message);
+}
+
 void show_topology(node *node, int chord_bool)
 {
     printf("\n================================================\n\n");
@@ -254,10 +258,4 @@ void show_routing(node *node, char dest[])
     
 
     printf("\n================================================\n\n");
-}
-
-void message(node *node){
-//     CHAT i n chat<LF>
-// O nó origem i envia ao nó destino n a mensagem chat. Estas mensagens têm 
-// 128 carateres no máximo
 }

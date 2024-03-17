@@ -11,6 +11,7 @@ void Interface(node *node)
   }
   else if (node->ring_bool == 1)
   {
+    fprintf(stdout, "\n \u2022 2ª interface");
     if (node->chord_bool == 0)
     {
       fprintf(stdout, "\n \u2022 chord (c) - Estabelicimento de uma corda com outro nó");
@@ -19,7 +20,7 @@ void Interface(node *node)
     {
       fprintf(stdout, "\n \u2022 remove chord (rc) - Eliminação da corda");
     }
-    fprintf(stdout, "\n \u2022 2ª interface"); //só para não aparecer uma mancha tão grande no código enquanto testo
+   //só para não aparecer uma mancha tão grande no código enquanto testo
     /*fprintf(stdout, "\n \u2022 show topology (st) - Mostra o estado do protocolo topológico");
     fprintf(stdout, "\n \u2022 show routing (sr) dest - Mostra a entrada da tabela de encaminhamento para o nó dest");
     fprintf(stdout, "\n \u2022 show path (sp) dest - Mostra o caminho mais curto para o nó dest");
@@ -77,9 +78,9 @@ void clean_node(node *node){
   node->ring_bool = 0;
   node->chord_bool = 0;                  
   node->n_chords = 0;                    
-  node->pred_fd = 0;
-  node->succ_fd = 0;
-  node->chord_fd = 0;
+  node->pred_fd = -1;
+  node->succ_fd = -1;
+  node->chord_fd = -1;
 }
 
 

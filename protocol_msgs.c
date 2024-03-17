@@ -138,6 +138,15 @@ void ROUTE_Received(node *node, char origin_id[], char dest_id[], char path[])
     strcpy(node->expedition_table, path);
 }
 
+void CHAT(node *node, char i[], char n[], char message[]){
+    //Está feita para o caso de enviar sempre para o succ, depois é preciso alterar
+    char msg_to_send[100];
+    int fd = 0;
+    sprintf(msg_to_send,"CHAT %s %s %s\n",i, n, message);
+
+    fd = TCP_Client("0", "0", msg_to_send, 1, node->succ_fd); 
+}
+
 void initialize_tables(node *node)
 {
     int i, k;
