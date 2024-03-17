@@ -13,5 +13,7 @@ void show_topology(node *node, int chord_bool);
 void leave(node* n);
 void show_routing(node *node, char dest[]);
 void chord(node *n, char buffer[]);
+void remove_chord(node *n);
+void message(node *node);
 
 #endif
