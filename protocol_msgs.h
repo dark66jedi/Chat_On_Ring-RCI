@@ -1,7 +1,7 @@
 #include "global_variables.h"
 
-#ifndef _PROTOCOL_MESSAGES_H
-#define _PROTOCOL_MESSAGES_H
+#ifndef _PROTOCOL_MSGS_H
+#define _PROTOCOL_MSGS_H
 
 void NODES(char ring[], char answer[]);
 void REG(char ring[], char answer[], node *node);
@@ -14,6 +14,5 @@ int CHORD(char connectIP[], char connectTCP[], node *node);
 void ROUTE(node *node, char target_node[], int fd);
 void receive_ENTRY();
 void ROUTE_Received(node *node, char origin_id[], char dest_id[], char path[]);
-void initialize_tables(node *node);
 
 #endif

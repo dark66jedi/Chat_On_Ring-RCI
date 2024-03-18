@@ -12,6 +12,8 @@ void direct_join(char ring[], node *n, char buffer[]);
 void show_topology(node *node, int chord_bool);
 void leave(node* n);
 void show_routing(node *node, char dest[]);
+void show_path(node *node, char dest[]);
+void show_forwarding(node *node);
 void chord(node *n, char buffer[]);
 
 #endif

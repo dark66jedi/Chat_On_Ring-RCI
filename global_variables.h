@@ -54,8 +54,8 @@ typedef struct node
   int chord_fd; //corda que EU criei
   /*********************************************/
 
-
-  char routing_table[30][30][50];   // tabela de encaminhamento do próprio nó
+  int filling_table_index = 0;
+  char routing_table[30][30][50];   // tabela de encaminhamento do próprio nó [destino][vizinhos][caminhos]
   char short_paths_table[30][50];   // tabela de caminhos mais curtos do próprio nó
   char expedition_table[30][3];     // tabela de expedição do próprio nó
   char table_indexes[30][50];       // vetor que identifica o indice atribuido a cada id de um nó (ex.: o id do nó pode ser 50 mas o indice é 2)

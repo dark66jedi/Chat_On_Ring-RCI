@@ -153,22 +153,11 @@ void ROUTE_Received(node *node, char origin_id[], char dest_id[], char path[])
 {
     int origin_id_index, dest_id_index;
 
+    check_for_new_node(node, path);
+
     search_index(node, origin_id, origin_id_index);
     search_index(node, dest_id, dest_id_index);
 
-    invert_order(path);
-
-    strcpy(node->expedition_table, path);
-}
-
-void initialize_tables(node *node)
-{
-    int i, k;
-    for (i = 0; i < MAX_N_NODES; i++)
-    {
-        for (k = 0; k < MAX_N_NODES; k++)
-        {
-            strcpy(node->routing_table[i][k], "-");
-        }
-    }
+    
+    
 }

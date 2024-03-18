@@ -45,8 +45,6 @@ void join(char ring[], node *n)
             exit(1);
         }
 
-        initialize_tables(n);
-
         strcpy(n->succ, n->self);
         strcpy(n->succ_IP, n->self_IP);
         strcpy(n->succ_TCP, n->self_TCP);
@@ -102,7 +100,6 @@ void join(char ring[], node *n)
                 j = i;
             }
         }
-        initialize_tables(n);
 
         // ENTRY para o sucessor
         fd = ENTRY(connectIP, connectTCP, n);
@@ -121,6 +118,7 @@ void join(char ring[], node *n)
         }
         n->ring_bool = 1;
     }
+    initialize_tables(n);
 }
 
 void direct_join(char ring[], node *n, char buffer[])
@@ -156,6 +154,8 @@ void direct_join(char ring[], node *n, char buffer[])
         n->ring_bool = 1;
         //fprintf(stdout,"Ring do anel: %s\n", n->ring);
     }
+
+    initialize_tables(n);
 }
 
 void chord(node *n, char buffer[]){
@@ -234,18 +234,84 @@ void show_topology(node *node, int chord_bool)
 
 void show_routing(node *node, char dest[])
 {
-    int dest_index = 0, pred_index = 0, succ_index = 0;
+    if(strcmp(dest, node->self) != 0)
+    {
+        int dest_index = 0, pred_index = 0, succ_index = 0;
 
-    search_index(node, dest, dest_index);
-    search_index(node, node->pred, pred_index);
-    search_index(node, node->succ, succ_index);
-    
-    printf("\n================================================\n\n");
+        search_index(node, dest, dest_index);
+        search_index(node, node->pred, pred_index);
+        search_index(node, node->succ, succ_index);
+        
+        printf("\n==========| Tabela de encaminhamento |==========\n\n");
 
-    printf("Destino: %s\n", dest);
-    printf("\u2022Pelo vizinho %s: %s\n", node->pred, node->routing_table[dest_index][pred_index]);
-    printf("\u2022Pelo vizinho %s: %s\n", node->succ, node->routing_table[dest_index][succ_index]);
-    
+        printf("Destino: %s\n", dest);
+        printf("\u2022Pelo vizinho %s: %s\n", node->pred, node->routing_table[dest_index][pred_index]);
+        printf("\u2022Pelo vizinho %s: %s\n", node->succ, node->routing_table[dest_index][succ_index]);
+        
 
-    printf("\n================================================\n\n");
+        printf("\n================================================\n\n");
+    }
+    else
+    {
+        printf("\n==========| Tabela de encaminhamento |==========\n\n");
+
+        printf("Destino: %s\n", dest);
+        printf("\u2022Pelo vizinho %s: %s\n", node->pred, "-");
+        printf("\u2022Pelo vizinho %s: %s\n", node->succ, "-");
+        
+
+        printf("\n================================================\n\n");
+    }
+}
+
+void show_path(node *node, char dest[])
+{
+    if(strcmp(dest, node->self) != 0)
+    {
+        int dest_index = 0;
+
+        search_index(node, dest, dest_index);
+        
+        printf("\n=============| Caminho mais curto |=============\n\n");
+
+        printf("Destino: %s\n", dest);
+        printf("\u2022Caminho mais curto: %s\n", node->short_paths_table[dest_index]);
+
+        printf("\n================================================\n\n");
+    }
+    else
+    {
+        printf("\n=============| Caminho mais curto |=============\n\n");
+
+        printf("Destino: %s\n", dest);
+        printf("\u2022Caminho mais curto: %s\n", node->self);
+
+        printf("\n================================================\n\n");
+    }    
+}
+
+void show_forwarding(node *node)
+{
+    if(strcmp(dest, node->self) != 0)
+    {
+        int dest_index = 0;
+
+        search_index(node, dest, dest_index);
+        
+        printf("\n============| Tabela de expedição |============\n\n");
+
+        printf("Destino: %s\n", dest);
+        printf("\u2022Caminho mais curto: %s\n", node->short_paths_table[dest_index]);
+
+        printf("\n===============================================\n\n");
+    }
+    else
+    {
+        printf("\n============| Tabela de expedição |============\n\n");
+
+        printf("Destino: %s\n", dest);
+        printf("\u2022Caminho mais curto: %s\n", node->self);
+
+        printf("\n===============================================\n\n");
+    }    
 }

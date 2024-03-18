@@ -101,6 +101,7 @@ int max(int x, int y, int z, int j)
 
 void search_index(node *node, char node_id[], int index)
 {
+  index = -1;
   for (size_t i = 0; i < MAX_N_NODES; i++)
   {
     if(strcmp(node_id, node->table_indexes[i]) == 0)
@@ -111,26 +112,88 @@ void search_index(node *node, char node_id[], int index)
   }
 }
 
-void invert_order(char path[])
+void check_for_new_node(node *node, char path[])
 {
-  char result[50] = "";
-  int i = strlen(path), result_i = 0;
+  char node_to_check[3] = "";
+  int i = 0, path_i = 0;
+  int index;
 
-  while(i>0)
+  while(path_i < strlen(path))
   {
-    result[result_i] = path[i-2];
-    result_i++;
-    result[result_i] = path[i-1];
-    result_i++;
+    i = 0;
+    node_to_check[i] = path[path_i];
+    i++;
+    path_i++;
+    node_to_check[i] = path[path_i];
+    i++;
+    path_i++;
 
-    if (i<3) break;
-    
-    result[result_i] = '-';
-    result_i++;
+    search_index(node, node_to_check, index);
 
-    i = i - 3;
+    if (index == -1)                        // novo nó no anel
+    {
+        strcpy(node->table_indexes[node->filling_table_index], node_to_check);
+
+        node->filling_table_index = node->filling_table_index + 1;
+    }
+
+    if (path_i>(strlen(path)-3)) break;
+  
+    path_i++;
   }
   strcpy(path,result);
+}
+
+void initialize_tables(node *node)
+{
+    int i, k;
+    char buffer[50];
+
+    for (i = 0; i < MAX_N_NODES; i++)
+    {
+        for (k = 0; k < MAX_N_NODES; k++)
+        {
+            strcpy(node->routing_table[i][k], "-");
+        }
+    }
+
+    // registra-se a ele próprio no table_indexes
+    strcpy(node->table_indexes[node->filling_table_index], node->self);
+    node->filling_table_index = node->filling_table_index + 1;
+
+    if ((strcmp(node->pred, node->self) != 0))
+    {
+        strcpy(node->table_indexes[node->filling_table_index], node->pred);
+        sprintf(buffer, "%s-%s", node->self, node->pred);
+        strcpy(node->routing_table[node->filling_table_index][node->filling_table_index], buffer);
+        node->filling_table_index = node->filling_table_index + 1;
+    }
+    if ((strcmp(node->succ, node->self) != 0) && (strcmp(node->pred, node->succ) != 0))
+    {
+        strcpy(node->table_indexes[node->filling_table_index], node->succ);
+        sprintf(buffer, "%s-%s", node->self, node->succ);
+        strcpy(node->routing_table[node->filling_table_index][node->filling_table_index], buffer);
+        node->filling_table_index = node->filling_table_index + 1;
+    }
+    
+}
+
+void update_neighbour(node *node, char old_neighbour[], char new_neighbour[])
+{
+  int old_neighbour_index, new_neighbour_index;
+
+  if(old_neighbour != NULL)
+  {
+    search_index(node, old_neighbour, old_neighbour_index);
+
+    for (size_t i = 0; i < MAX_N_NODES; i++)
+    {
+      strcpy(node->routing_table[i][old_neighbour_index], "-");
+    }
+  }
+  
+  strcpy(node->table_indexes[node->filling_table_index], new_neighbour);
+  node->filling_table_index = node->filling_table_index + 1;
 }
 
 void update_tables(node *node)
