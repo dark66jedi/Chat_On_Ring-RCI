@@ -118,6 +118,7 @@ void check_for_new_node(node *node, char path[])
   char node_to_check[3] = "";
   int i = 0, path_i = 0;
   int index;
+  char result[100];
 
   while(path_i < strlen(path))
   {

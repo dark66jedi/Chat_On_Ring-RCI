@@ -39,7 +39,7 @@ int main(int argc, char *argv[])
     {
       strcpy(IP_global, argv[1]);
       strcpy(TCP_global, argv[2]);
-      strcpy(regIP, "193.136.138.142");
+      strcpy(regIP, "tejo.tecnico.ulisboa.pt"); //193.136.138.142
       strcpy(regUDP, "59000");
     }
 

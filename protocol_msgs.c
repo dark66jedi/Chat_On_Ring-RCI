@@ -106,8 +106,12 @@ int CHORD(char connectIP[], char connectTCP[], node *node)
     int fd = 0;
     
     sprintf(msg_to_send,"CHORD %s\n",node->self);
+    fprintf(stdout,"mensagem CHORD:\n",msg_to_send);
+    fprintf(stdout,"TCP:\n",connectIP);
+    fprintf(stdout,"Porto:\n",connectTCP);
 
     fd = TCP_Client(connectIP, connectTCP, msg_to_send, 0, 0); 
+    return fd;
 }
 
 void ROUTE(node *node, char target_node[], int fd)
