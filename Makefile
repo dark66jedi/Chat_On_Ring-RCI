@@ -1,4 +1,4 @@
-CC=gcc
+CC=gcc -g
 #CFLAGS= -std=c99 -Wall
 
 COR: main.o select.o udp_functions.o tcp_functions.o protocol_msgs.o user_cmds.o aux_functions.o

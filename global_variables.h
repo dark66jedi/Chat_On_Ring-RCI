@@ -52,6 +52,7 @@ typedef struct node
   int pred_fd;
   int succ_fd;
   int chord_fd; //corda que EU criei
+  int chord_rec[20][2]; //id, fd
   /*********************************************/
 
   int filling_table_index;

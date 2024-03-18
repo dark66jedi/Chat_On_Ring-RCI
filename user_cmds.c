@@ -166,6 +166,7 @@ void chord(node *n, char buffer[]){
     if (strcmp(n->succ_two,n->self) == 0 || strcmp(n->succ_two,n->pred) == 0){ //caso de só existir 1, 2 ou 3 aneis no anel
         fprintf(stdout,"O anel tem 3 ou menos nós. Não existem nós com os quais é possível criar uma corda!");
     } else{
+        fprintf(stdout,"Entrei no chord\n");
         NODES(n->ring, answer);
         char *after = DeleteMethod(answer);
         while (*after != '\0') // guardar nodes list para comparar
@@ -182,10 +183,15 @@ void chord(node *n, char buffer[]){
             }
         }
         i=0;
+        fprintf(stdout,"Faço o Delete bem\n");
+        fprintf(stdout,"list1 id:%s\n", list[0].id);
         while(strcmp(list[i].id,n->self) == 0 || strcmp(list[i].id,n->pred) == 0 || strcmp(list[i].id,n->succ) == 0){
             i++;
         }
-        n->chord_fd = CHORD(list->IP[i], list->TCP[i], n);
+        strcpy(n->chord,list[i].id);
+        strcpy(n->chord_IP,list[i].IP);
+        strcpy(n->chord_TCP,list[i].TCP);
+        n->chord_fd = CHORD(n->chord_IP, n->chord_TCP, n);
         n->chord_bool = 1;
         n->n_chords++;
     }
@@ -205,7 +211,7 @@ void message(node *n, char dest[], char message[]){
     CHAT(n,n->self,dest,message);
 }
 
-void show_topology(node *node, int chord_bool)
+void show_topology(node *node)
 {
     printf("\n================================================\n\n");
 
@@ -225,10 +231,11 @@ void show_topology(node *node, int chord_bool)
     printf("\t\u2022 IP: %s \n", node->succ_two_IP);
     printf("\t\u2022 Porto: %s \n\n", node->succ_two_TCP);
 
+    //Não esquecer de tirar
     printf("\tSeu predecessor:\n");
-    printf("\t\u2022 id: %s \n", node->pred);
+    printf("\t\u2022 id: %s \n\n", node->pred);
 
-    if (chord_bool == 1)
+    if (node->chord_bool == 1)
     {
         printf("\tO vizinho na corda que criou:\n");
         printf("\t\u2022 id: %s \n", node->chord);
@@ -303,6 +310,7 @@ void show_path(node *node, char dest[])
 
 void show_forwarding(node *node)
 {
+    char dest[3]; //Duarrte
     if(strcmp(dest, node->self) != 0)
     {
         int dest_index = 0;
