@@ -17,8 +17,6 @@ void leave(node *n){
         exit(1);
     }
     return;
-    //close(node->pred_fd_send);
-    //close(node->succ_fd_send);
 }
 
 void join(char ring[], node *n)
@@ -190,7 +188,20 @@ void chord(node *n, char buffer[]){
         n->chord_bool = 1;
         n->n_chords++;
     }
+}
 
+void remove_chord(node *n){
+    n->chord_bool = 0;
+    close(n->chord_fd);
+    n->chord[0] = '\0'; 
+    n->chord_IP[0] = '\0'; 
+    n->chord_TCP[0] = '\0'; 
+    //Atualizar caminhos
+    return;
+}
+
+void message(node *n, char dest[], char message[]){
+    CHAT(n,n->self,dest,message);
 }
 
 void show_topology(node *node, int chord_bool)
@@ -216,13 +227,12 @@ void show_topology(node *node, int chord_bool)
     printf("\tSeu predecessor:\n");
     printf("\t\u2022 id: %s \n", node->pred);
 
-    // AINDA POR FAZER
     if (chord_bool == 1)
     {
-        printf("\tSeu segundo-sucessor:\n");
-        printf("\t\u2022 id: %s \n", node->succ_two);
-        printf("\t\u2022 IP: %s \n", node->succ_two_IP);
-        printf("\t\u2022 Porto: %s \n\n", node->succ_two_TCP);
+        printf("\tO vizinho na corda que criou:\n");
+        printf("\t\u2022 id: %s \n", node->chord);
+        printf("\t\u2022 IP: %s \n", node->chord_IP);
+        printf("\t\u2022 Porto: %s \n\n", node->chord_TCP);
     }
     else
     {

@@ -10,5 +10,6 @@ void SUCC_Received(char aux_id[], char aux_IP[], char aux_TCP[], node *node, int
 void ENTRY_Received(char aux_id[], char aux_IP[], char aux_TCP[], node *node, int fd);
 void PRED_Received(char aux_id[], node *node, int fd);
 void CHORD_Received(char aux_id[], node *node, int fd);
+void CHAT_Received(node *node, char i[], char n[], char message[]);
 
 #endif
