@@ -134,7 +134,6 @@ void check_for_new_node(node *node, char path[])
     if (index == -1)                        // novo nó no anel
     {
         strcpy(node->table_indexes[node->filling_table_index], node_to_check);
-
         node->filling_table_index = node->filling_table_index + 1;
     }
 
@@ -142,7 +141,6 @@ void check_for_new_node(node *node, char path[])
   
     path_i++;
   }
-  strcpy(path,result);
 }
 
 void initialize_tables(node *node)
@@ -159,7 +157,9 @@ void initialize_tables(node *node)
     }
 
     // registra-se a ele próprio no table_indexes
+    node->filling_table_index = 0;
     strcpy(node->table_indexes[node->filling_table_index], node->self);
+    strcpy(node->routing_table[node->filling_table_index], node->self);
     node->filling_table_index = node->filling_table_index + 1;
 
     if ((strcmp(node->pred, node->self) != 0))

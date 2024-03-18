@@ -628,6 +628,8 @@ void PRED_Received(char aux_id[], node *node, int fd)
     strcpy(node->pred, aux_id);
     node->pred_fd = fd;
   }
+  ROUTE(node, node->pred, node->pred_fd);
+  ROUTE(node, node->succ, node->succ_fd);
 }
 
 void ENTRY_Received(char aux_id[], char aux_IP[], char aux_TCP[], node *node, int fd)

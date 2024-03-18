@@ -54,7 +54,7 @@ typedef struct node
   int chord_fd; //corda que EU criei
   /*********************************************/
 
-  int filling_table_index = 0;
+  int filling_table_index;
   char routing_table[30][30][50];   // tabela de encaminhamento do próprio nó [destino][vizinhos][caminhos]
   char short_paths_table[30][50];   // tabela de caminhos mais curtos do próprio nó
   char expedition_table[30][3];     // tabela de expedição do próprio nó

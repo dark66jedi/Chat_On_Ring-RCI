@@ -9,7 +9,7 @@ char *DeleteMethod_space(char *string);
 char *find_next_protocol(char *buffer);
 int max(int x, int y, int z, int j);
 void search_index(node *node, char node_id[], int index);
-void check_for_new_node(node *node, char path[]);
+void check_for_new_node(node *node, char path[], char new[]);
 void initialize_tables(node *node);
 void update_neighbour(node *node, char old_neighbour[], char new_neighbour[]);
 void update_tables(node *node);

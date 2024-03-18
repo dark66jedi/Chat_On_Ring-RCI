@@ -114,7 +114,7 @@ void ROUTE(node *node, char target_node[], int fd)
 {
     char msg_to_send[100] = "";
 
-    for (size_t i = 0; i < MAX_N_NODES; i++)
+    for (size_t i = 1; i < MAX_N_NODES; i++)
     {
         if(strcmp(node->short_paths_table[i], "-") == 0) continue;
         else
@@ -124,17 +124,45 @@ void ROUTE(node *node, char target_node[], int fd)
         }
         
     }
+
+    // ROUTE do próprio nó -> "ROUTE 30 30 30"
+    // Tem que ser a última msg de ROUTE enviada por bloco de ROUTEs enviado
+    sprintf(msg_to_send, "ROUTE %s %s %s\n", node->self, node->table_indexes[0], node->short_paths_table[0]);
+    TCP_Client(NULL, NULL, msg_to_send, 1, fd);
 }
 
 void ROUTE_Received(node *node, char origin_id[], char dest_id[], char path[])
 {
     int origin_id_index, dest_id_index;
+    char new_node[3] = "";
+    char new_path[50] = "";
+    
 
-    check_for_new_node(node, path);
+    check_for_new_node(node, path, new_node);
 
     search_index(node, origin_id, origin_id_index);
     search_index(node, dest_id, dest_id_index);
 
+    if(strcmp(node->self, dest_id) != 0)
+    {
+        sprintf(new_path, "%s-%s", node->self, path);
+
+        if (strlen(new_path) != strlen(node->routing_table[dest_id_index][origin_id_index]))
+        {
+            strcpy(node->routing_table[dest_id_index][origin_id_index], path);
+            update_tables(node);
+        }
+    }
+    else
+    {
+        sprintf(new_path, "%s-%s", node->self, origin_id);
+
+        if (strlen(new_path) != strlen(node->routing_table[dest_id_index][origin_id_index]))
+        {
+            strcpy(node->routing_table[dest_id_index][origin_id_index], path);
+            update_tables(node);
+        }
+    }
     
     
 }

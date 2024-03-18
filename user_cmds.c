@@ -154,6 +154,7 @@ void direct_join(char ring[], node *n, char buffer[])
     }
 
     initialize_tables(n);
+    
 }
 
 void chord(node *n, char buffer[]){
