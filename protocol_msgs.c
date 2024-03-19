@@ -105,10 +105,10 @@ int CHORD(char connectIP[], char connectTCP[], node *node)
     char msg_to_send[100];
     int fd = 0;
     
-    sprintf(msg_to_send,"CHORD %s\n",node->self);
-    fprintf(stdout,"mensagem CHORD:\n",msg_to_send);
-    fprintf(stdout,"TCP:\n",connectIP);
-    fprintf(stdout,"Porto:\n",connectTCP);
+    sprintf(msg_to_send,"CHORD: %s\n",node->self);
+    fprintf(stdout,"mensagem CHORD: %s\n",msg_to_send);
+    fprintf(stdout,"TCP: %s\n",connectIP);
+    fprintf(stdout,"Porto: %s\n",connectTCP);
 
     fd = TCP_Client(connectIP, connectTCP, msg_to_send, 0, 0); 
     return fd;
@@ -126,7 +126,6 @@ void ROUTE(node *node, char target_node[], int fd)
             sprintf(msg_to_send, "ROUTE %s %s %s\n", node->self, node->table_indexes[i], node->short_paths_table[i]);
             TCP_Client(NULL, NULL, msg_to_send, 1, fd);
         }
-        
     }
 
     // ROUTE do próprio nó -> "ROUTE 30 30 30"
@@ -137,15 +136,27 @@ void ROUTE(node *node, char target_node[], int fd)
 
 void ROUTE_Received(node *node, char origin_id[], char dest_id[], char path[])
 {
-    int origin_id_index, dest_id_index;
+    int origin_id_index = -1, dest_id_index = -1;
     char new_node[3] = "";
     char new_path[50] = "";
+
+    printf("\n\n:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::\n");
+    printf("\norigin_id: %s", origin_id);
+    printf("\ndest_id: %s", dest_id);
+    printf("\npath: %s", path);
+    printf("\n:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::\n\n");
     
 
-    check_for_new_node(node, path, new_node);
+    check_for_new_node(node, path);
 
-    search_index(node, origin_id, origin_id_index);
-    search_index(node, dest_id, dest_id_index);
+    search_index(node, origin_id, &origin_id_index);
+    search_index(node, dest_id, &dest_id_index);
+
+    printf("\norigin_id_index: %d", origin_id_index);
+    printf("\ndest_id_index: %d", dest_id_index);
+    printf("\n%d", node->filling_table_index);
+    printf("\n:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::\n\n");
+    
 
     if(strcmp(node->self, dest_id) != 0)
     {
@@ -155,6 +166,8 @@ void ROUTE_Received(node *node, char origin_id[], char dest_id[], char path[])
         {
             strcpy(node->routing_table[dest_id_index][origin_id_index], path);
             update_tables(node);
+            ROUTE(node, node->pred, node->pred_fd);
+            ROUTE(node, node->succ, node->succ_fd);
         }
     }
     else
@@ -165,10 +178,10 @@ void ROUTE_Received(node *node, char origin_id[], char dest_id[], char path[])
         {
             strcpy(node->routing_table[dest_id_index][origin_id_index], path);
             update_tables(node);
+            ROUTE(node, node->pred, node->pred_fd);
+            ROUTE(node, node->succ, node->succ_fd);
         }
-    }
-    
-    
+    } 
 }
 
 void CHAT(node *node, char i[], char n[], char message[]){

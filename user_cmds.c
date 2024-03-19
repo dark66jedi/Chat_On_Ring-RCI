@@ -256,9 +256,9 @@ void show_routing(node *node, char dest[])
     {
         int dest_index = 0, pred_index = 0, succ_index = 0;
 
-        search_index(node, dest, dest_index);
-        search_index(node, node->pred, pred_index);
-        search_index(node, node->succ, succ_index);
+        search_index(node, dest, &dest_index);
+        search_index(node, node->pred, &pred_index);
+        search_index(node, node->succ, &succ_index);
         
         printf("\n==========| Tabela de encaminhamento |==========\n\n");
 
@@ -288,7 +288,7 @@ void show_path(node *node, char dest[])
     {
         int dest_index = 0;
 
-        search_index(node, dest, dest_index);
+        search_index(node, dest, &dest_index);
         
         printf("\n=============| Caminho mais curto |=============\n\n");
 
@@ -315,7 +315,7 @@ void show_forwarding(node *node)
     {
         int dest_index = 0;
 
-        search_index(node, dest, dest_index);
+        search_index(node, dest, &dest_index);
         
         printf("\n============| Tabela de expedição |============\n\n");
 

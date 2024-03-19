@@ -12,9 +12,10 @@ void impl_select(node *node)
   socklen_t addrlen;
   int counter = 0, nread = 0, n = 0;
   int lixo = 0;
-  char buffer[128];
+  char buffer[500];
   char readInter[128];
   char modo[20];
+  char* token = NULL;
 
   /* socket de escuta tcp (receber informação de nós fora do ring)*/
   if ((fd = socket(AF_INET, SOCK_STREAM, 0)) == -1)
@@ -189,7 +190,7 @@ void impl_select(node *node)
     /* fd responsável pelo canal de escuta ********************************/
     if (FD_ISSET(fd, &rfds))
     {
-      memset(buffer, '\0', 128);
+      memset(buffer, '\0', 500);
       fprintf(stdout, "Recebi uma mensagem de alguém\n");
       // fprintf(stdout,"foi de: %d\n", fd); //socket de escuta
       FD_CLR(fd, &rfds);
@@ -199,7 +200,7 @@ void impl_select(node *node)
         printf("Erro no accept");
         exit(1);
       }
-      while ((n = read(newfd, buffer, 128)) != 0) 
+      while ((n = read(newfd, buffer, 500)) != 0) 
       {
         if (n == -1)
         {
@@ -217,9 +218,9 @@ void impl_select(node *node)
     /* fd responsável pelo canal do sucessor ******************************/
     if (FD_ISSET(node->succ_fd, &rfds))
     {
-      memset(buffer, '\0', 128);
+      memset(buffer, '\0', 500);
       FD_CLR(node->succ_fd, &rfds);
-      while ((n = read(node->succ_fd, buffer, 128)) != 0)
+      while ((n = read(node->succ_fd, buffer, 500)) != 0)
       {
         printf("Recebi uma mensagem do meu succ\n");
         fprintf(stdout, "n pred:%d\n", n);
@@ -231,7 +232,14 @@ void impl_select(node *node)
         else
         {
           // identificar o protocolo recebido
-          choose_received_protocol(node, buffer, node->succ_fd);
+          token = strtok(buffer,"\n");
+          while (token != NULL)
+          {
+            choose_received_protocol(node, token, node->succ_fd);
+            
+            strcpy(token, strtok(NULL,"\n"));
+          }
+
           fprintf(stdout, "Cheguei aqui");
           break; // necessário para parar o while se não eles mesmo depois de tudo continua aqui e não recebe mais coisas
         }
@@ -285,10 +293,10 @@ void impl_select(node *node)
     if (FD_ISSET(node->pred_fd, &rfds))
     {
       FD_CLR(node->pred_fd, &rfds);
-      memset(buffer, '\0', 128);
+      memset(buffer, '\0', 500);
       // printf("Recebi uma mensagem do meu pred");
       // fprintf(stdout, "A fd é: %d \n", node->pred_fd);
-      while ((n = read(node->pred_fd, buffer, 128)) != 0)
+      while ((n = read(node->pred_fd, buffer, 500)) != 0)
       {
         printf("Recebi uma mensagem do meu pred");
         fprintf(stdout, "n pred:%d\n", n);
@@ -300,7 +308,13 @@ void impl_select(node *node)
         else
         {
           // identificar o protocolo recebido
-          choose_received_protocol(node, buffer, node->pred_fd);
+          token = strtok(buffer,"\n");
+          while (token != NULL)
+          {
+            choose_received_protocol(node, token, node->pred_fd);
+            
+            strcpy(token, strtok(NULL,"\n"));
+          }
           break; // necessário para parar o while se não eles mesmo depois de tudo continua aqui e não recebe mais coisas
         }
       }
@@ -326,8 +340,8 @@ void impl_select(node *node)
     if (FD_ISSET(node->chord_fd, &rfds))
     {
       FD_CLR(node->chord_fd, &rfds);
-      memset(buffer, '\0', 128);
-      while ((n = read(newfd, buffer, 128)) != 0)
+      memset(buffer, '\0', 500);
+      while ((n = read(newfd, buffer, 500)) != 0)
       {
         if (n == -1)
         {
@@ -335,7 +349,13 @@ void impl_select(node *node)
           exit(1);
         }
         // identificar o protocolo recebido
-        choose_received_protocol(node, buffer, node->chord_fd);
+        token = strtok(buffer,"\n");
+          while (token != NULL)
+          {
+            choose_received_protocol(node, token, node->chord_fd);
+            
+            strcpy(token, strtok(NULL,"\n"));
+          }
         break; // necessário para parar o while se não eles mesmo depois de tudo continua aqui e não recebe mais coisas
       }
       // close(newfd); // não pdoemos dar close, só no leave
@@ -348,7 +368,7 @@ void impl_select(node *node)
 
 void choose_terminal_cmd(node *node, char readInter[])
 {
-  char buffer[128];
+  char buffer[500];
   char modo[15], modo2[15];
   char ring[4];
   char id[3], dest[3];
@@ -533,6 +553,7 @@ void choose_received_protocol(node *node, char buffer[], int fd)
   fprintf(stdout, "Recebi algo: %s\n", buffer);
   // fprintf(stdout,"tamanho %zu\n", strlen("\n"));
   sscanf(buffer, "%s", protocol);
+  printf("\n\n»»»»»»»»»\nprotocol: %s\n««««««««««««\n\n", protocol);
   if (strcmp(protocol, "ENTRY") == 0)
   {
     sscanf(buffer, "%s %s %s %s", protocol, aux_id, aux_IP, aux_TCP);

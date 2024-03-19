@@ -45,6 +45,7 @@ int main(int argc, char *argv[])
 
     n->chord_bool = 0;
     n->ring_bool = 0;
+
     //ESCLARECER: Dar "leave" é basicamente como se voltássemos ao inicio da aplicação e tivéssemos de dar join/djoin de novo? Ou o nó mantém o seu id?
     Interface(n);
     impl_select(n);

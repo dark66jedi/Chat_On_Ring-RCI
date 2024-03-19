@@ -100,15 +100,16 @@ int max(int x, int y, int z, int j)
     return highest;
 }
 
-void search_index(node *node, char node_id[], int index)
+void search_index(node *node, char node_id[], int *index)
 {
-  index = -1;
+  *index = -1;
   for (size_t i = 0; i < MAX_N_NODES; i++)
   {
     if(strcmp(node_id, node->table_indexes[i]) == 0)
     {
-      index = i;
-      break;
+      *index = i;
+      printf("\n\nSEARCH: %d", *index);
+      return;
     }
   }
 }
@@ -130,12 +131,12 @@ void check_for_new_node(node *node, char path[])
     i++;
     path_i++;
 
-    search_index(node, node_to_check, index);
+    search_index(node, node_to_check, &index);
 
     if (index == -1)                        // novo nó no anel
     {
-        strcpy(node->table_indexes[node->filling_table_index], node_to_check);
-        node->filling_table_index = node->filling_table_index + 1;
+      strcpy(node->table_indexes[node->filling_table_index], node_to_check);
+      node->filling_table_index = node->filling_table_index + 1;
     }
 
     if (path_i>(strlen(path)-3)) break;
@@ -160,24 +161,29 @@ void initialize_tables(node *node)
     // registra-se a ele próprio no table_indexes
     node->filling_table_index = 0;
     strcpy(node->table_indexes[node->filling_table_index], node->self);
-    strcpy(node->routing_table[node->filling_table_index], node->self);
+    strcpy(node->routing_table[node->filling_table_index][node->filling_table_index], node->self);
     node->filling_table_index = node->filling_table_index + 1;
 
-    if ((strcmp(node->pred, node->self) != 0))
+    if ((strcmp(node->succ, node->self) != 0))
     {
-        strcpy(node->table_indexes[node->filling_table_index], node->pred);
-        sprintf(buffer, "%s-%s", node->self, node->pred);
-        strcpy(node->routing_table[node->filling_table_index][node->filling_table_index], buffer);
-        node->filling_table_index = node->filling_table_index + 1;
+      strcpy(node->table_indexes[node->filling_table_index], node->succ);
+      sprintf(buffer, "%s-%s", node->self, node->succ);
+      strcpy(node->routing_table[node->filling_table_index][node->filling_table_index], buffer);
+      node->filling_table_index = node->filling_table_index + 1;
     }
-    if ((strcmp(node->succ, node->self) != 0) && (strcmp(node->pred, node->succ) != 0))
+    if ((strcmp(node->pred, node->self) != 0) && (strcmp(node->pred, "") != 0))
     {
-        strcpy(node->table_indexes[node->filling_table_index], node->succ);
-        sprintf(buffer, "%s-%s", node->self, node->succ);
-        strcpy(node->routing_table[node->filling_table_index][node->filling_table_index], buffer);
-        node->filling_table_index = node->filling_table_index + 1;
+      strcpy(node->table_indexes[node->filling_table_index], node->pred);
+      sprintf(buffer, "%s-%s", node->self, node->pred);
+      strcpy(node->routing_table[node->filling_table_index][node->filling_table_index], buffer);
+      node->filling_table_index = node->filling_table_index + 1;
     }
-    
+    update_tables(node);
+    printf("\n\n»»»»»»»»»»»»»»»»»»»»»»»»»»»»»»»»»»»»»»»»»»»»»»»»»»»»»\n\n");
+    printf("Caminho para mim %s: %s\n", node->self, node->routing_table[0][0]);
+    printf("Caminho para succ %s: %s\n", node->succ, node->routing_table[1][1]);
+    printf("Caminho para pred %s: %s\n", node->pred, node->routing_table[2][2]);
+    printf("\n«««««««««««««««««««««««««««««««««««««««««««««««««««««\n\n");
 }
 
 void update_neighbour(node *node, char old_neighbour[], char new_neighbour[])
@@ -186,7 +192,7 @@ void update_neighbour(node *node, char old_neighbour[], char new_neighbour[])
 
   if(old_neighbour != NULL)
   {
-    search_index(node, old_neighbour, old_neighbour_index);
+    search_index(node, old_neighbour, &old_neighbour_index);
 
     for (size_t i = 0; i < MAX_N_NODES; i++)
     {
@@ -201,10 +207,11 @@ void update_neighbour(node *node, char old_neighbour[], char new_neighbour[])
 void update_tables(node *node)
 {
   // first update short paths table with routing table
-  char short_path[50] = "-";
+  char short_path[50];
 
   for (size_t i = 0; i < MAX_N_NODES; i++)
   {
+    strcpy(short_path, "-");
     for (size_t k = 0; k < MAX_N_NODES; k++)
     {
       if(strcmp(node->routing_table[i][k], "-") == 0) continue;
