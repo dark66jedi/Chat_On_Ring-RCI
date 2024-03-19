@@ -26,22 +26,24 @@ void impl_select(node *node)
     exit(0);
   }
   perror("fd");
+  fprintf(stdout, "fd: %d\n",fd);
   memset(&hints, 0, sizeof hints);
   hints.ai_family = AF_INET;       // IPv4
   hints.ai_socktype = SOCK_STREAM; // TCP socket
   hints.ai_flags = AI_PASSIVE;
+  fprintf(stdout, "Aqui entra?1\n");
   if ((errcode_listen_tdp = getaddrinfo(NULL, TCP_global, &hints, &res)) != 0)
   {
     printf("Erro getaddrinfo tcp");
     exit(1);
   }
-
+  fprintf(stdout, "Aqui entra?2\n");
   if (bind(fd, res->ai_addr, res->ai_addrlen) == -1)
   {
     printf("Erro bind tcp escuta");
     exit(1);
   }
-
+  fprintf(stdout, "Aqui entra?3\n");
   if (listen(fd, 5) == -1)
   {
     printf("Erro listen tcp");
@@ -50,9 +52,11 @@ void impl_select(node *node)
   // fprintf(stdout, "socket de escuta fd: %d\n", fd);
   while (1)
   { // ACTUALLY select
+    fprintf(stdout, "Aqui entra?4\n");
     FD_ZERO(&rfds);
     FD_SET(0, &rfds);
     FD_SET(fd, &rfds);
+    fprintf(stdout, "Aqui entra?5\n");
     maxfd = max(fd, node->pred_fd, node->succ_fd, node->chord_fd);
     // fprintf(stdout, "fd: %d, node->pred_fd: %d, node->succ_fd: %d, node->chord_fd: %d\n", fd, node->pred_fd, node->succ_fd, node->chord_fd);
     // fprintf(stdout, "Maxfd: %d\n", maxfd);
@@ -88,6 +92,7 @@ void impl_select(node *node)
   // }
 
   counter = select(maxfd + 1, &rfds, (fd_set *)NULL, (fd_set *)NULL, (struct timeval *)NULL);
+  fprintf(stdout, "Pós select\n");
   perror("Erro ao abrir o arquivo");
   // printf("Error opening file: %s\n", strerror(errno));
   // fprintf(stdout, "counter select %d\n", counter);
@@ -101,6 +106,7 @@ void impl_select(node *node)
   /* fd responsável pelo terminal****************************************/
   if (FD_ISSET(0, &rfds))
   {
+    fprintf(stdout, "Terminal\n");
     FD_CLR(0, &rfds);
     if (fgets(readInter, sizeof(readInter), stdin) != NULL)
     {
@@ -139,6 +145,10 @@ void impl_select(node *node)
           close(node->chord_fd);
         }
         clean_node(node);
+        FD_ZERO(&rfds);
+        freeaddrinfo(res);
+        fprintf(stdout, "fd antes do leave: %d", fd);
+        close(fd);
         return;
       }
       else if ((node->succ == node->pred) && (node->self == node->pred))
@@ -149,6 +159,9 @@ void impl_select(node *node)
           // fprintf(stdout,"Entrei mal!\n");
         }
         clean_node(node);
+        FD_ZERO(&rfds);
+        freeaddrinfo(res);
+        close(fd);
         return;
       }
     }
