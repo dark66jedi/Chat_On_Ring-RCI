@@ -124,6 +124,7 @@ void ROUTE(node *node, char target_node[], int fd)
         else
         {
             sprintf(msg_to_send, "ROUTE %s %s %s\n", node->self, node->table_indexes[i], node->short_paths_table[i]);
+            fprintf(stdout, "mensagem ROUTE: %s\n", msg_to_send);
             TCP_Client(NULL, NULL, msg_to_send, 1, fd);
         }
     }

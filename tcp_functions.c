@@ -33,12 +33,13 @@ int TCP_Client(char connectIP[], char connectTCP[], char mensagem[], int sock_cr
     }
     fprintf(stdout, "ainda não deu segmentation 2\n");
 
-    // printf("\nconnectIP: %s", connectIP);
-    // printf("\nconnectTCP: %s\n", connectTCP);
+    printf("\nconnectIP: %s", connectIP);
+    printf("\nconnectTCP: %s\n", connectTCP);
+    printf("\nFD: %d\n", fd);
     n = connect(fd, res->ai_addr, res->ai_addrlen);
     if (n == -1)
     {
-      printf("Erro no connect"); // pode ser por outra comunicação já estar a ser feito nessa socket?
+      printf("Erro no connect\n"); // pode ser por outra comunicação já estar a ser feito nessa socket?
       exit(1);
     }
     fprintf(stdout, "ainda não deu segmentation 13n");

@@ -210,6 +210,7 @@ void impl_select(node *node)
         // identificar o protocolo recebido
         fprintf(stdout,"estou a receber no buffer: %s\n", buffer);
         choose_received_protocol(node, buffer, newfd);
+        fprintf(stdout, "Voltei do choose protocol\n");
         break; // necessário para parar o while se não eles mesmo depois de tudo continua aqui e não deixa ler mais coisas do terminal
       }
     }
@@ -232,13 +233,17 @@ void impl_select(node *node)
         else
         {
           // identificar o protocolo recebido
-          token = strtok(buffer,"\n");
+          choose_received_protocol(node,buffer,node->succ_fd);
+
+          /*token = strtok(buffer,"\n");
           while (token != NULL)
           {
             choose_received_protocol(node, token, node->succ_fd);
-            
-            strcpy(token, strtok(NULL,"\n"));
-          }
+            fprintf(stdout, "Voltei do choose protocol\n");
+            fprintf(stdout,"token:%s\n", token);
+            //strcpy(token, strtok(NULL,"\n"));
+            //strcpy(token, strtok(NULL,"\n"));
+          } */
 
           fprintf(stdout, "Cheguei aqui");
           break; // necessário para parar o while se não eles mesmo depois de tudo continua aqui e não recebe mais coisas
@@ -308,13 +313,14 @@ void impl_select(node *node)
         else
         {
           // identificar o protocolo recebido
-          token = strtok(buffer,"\n");
+          choose_received_protocol(node, buffer, node->pred_fd);
+          /*token = strtok(buffer,"\n");
           while (token != NULL)
           {
             choose_received_protocol(node, token, node->pred_fd);
-            
+            fprintf(stdout, "Voltei do choose protocol\n");
             strcpy(token, strtok(NULL,"\n"));
-          }
+          }*/
           break; // necessário para parar o while se não eles mesmo depois de tudo continua aqui e não recebe mais coisas
         }
       }
@@ -349,13 +355,14 @@ void impl_select(node *node)
           exit(1);
         }
         // identificar o protocolo recebido
-        token = strtok(buffer,"\n");
+        choose_received_protocol(node, buffer, node->chord_fd);
+        /* token = strtok(buffer,"\n");
           while (token != NULL)
           {
             choose_received_protocol(node, token, node->chord_fd);
-            
+            fprintf(stdout, "Voltei do choose protocol\n");
             strcpy(token, strtok(NULL,"\n"));
-          }
+          }*/
         break; // necessário para parar o while se não eles mesmo depois de tudo continua aqui e não recebe mais coisas
       }
       // close(newfd); // não pdoemos dar close, só no leave
@@ -540,7 +547,7 @@ void choose_terminal_cmd(node *node, char readInter[])
 }
 
 
-void choose_received_protocol(node *node, char buffer[], int fd)
+void choose_received_protocol(node *node, char buffer[], int fd) 
 {
   char protocol[128];
   char aux_id[3];
@@ -552,7 +559,7 @@ void choose_received_protocol(node *node, char buffer[], int fd)
 
   fprintf(stdout, "Recebi algo: %s\n", buffer);
   // fprintf(stdout,"tamanho %zu\n", strlen("\n"));
-  sscanf(buffer, "%s", protocol);
+ /* sscanf(buffer, "%s", protocol);
   printf("\n\n»»»»»»»»»\nprotocol: %s\n««««««««««««\n\n", protocol);
   if (strcmp(protocol, "ENTRY") == 0)
   {
@@ -563,6 +570,7 @@ void choose_received_protocol(node *node, char buffer[], int fd)
   {
     sscanf(buffer, "%s %s %s %s", protocol, aux_id, aux_IP, aux_TCP);
     SUCC_Received(aux_id, aux_IP, aux_TCP, node, fd);
+    fprintf(stdout, "Sai do SUCC Received\n");
   }
   else if (strcmp(protocol, "PRED") == 0)
   {
@@ -583,9 +591,9 @@ void choose_received_protocol(node *node, char buffer[], int fd)
   {
     sscanf(buffer, "%s %s %s %s", protocol, i, n, message);
     CHAT_Received(node, i, n, message);
-  }
+  }*/
 
-  /*char *after = buffer;
+  char *after = buffer;
   // fprintf(stdout, "After: %s", after);
   char *aux_after = buffer;
   while ((aux_after = find_next_protocol(after)) != NULL) // guardar mensagens a serem recebidas
@@ -613,15 +621,21 @@ void choose_received_protocol(node *node, char buffer[], int fd)
     }
     else if (strcmp(protocol, "ROUTE") == 0)
     {
-      sscanf(after, "%s %s", protocol, origin_id, dest_id, path);
+      sscanf(after, "%s %s %s %s", protocol, origin_id, dest_id, path);
       ROUTE_Received(node, origin_id, dest_id, path);
+    }
+    else if (strcmp(protocol, "CHAT") == 0)
+    {
+      sscanf(buffer, "%s %s %s %s", protocol, i, n, message);
+      CHAT_Received(node, i, n, message);
     }
     // after = find_next_protocol(after);
     // fprintf(stdout,"After no final de uma ronda: %s\n", after);
     // fprintf(stdout,"Aux no final de uma ronda: %s\n", aux_after);
     after = aux_after;
-  }*/
-  // fprintf(stdout,"After assim que saio do while: %s\n", after);
+  }
+  fprintf(stdout,"After assim que saio do while: %s\n", after);
+  
 }
 
 void PRED_Received(char aux_id[], node *node, int fd)
@@ -644,6 +658,7 @@ void PRED_Received(char aux_id[], node *node, int fd)
   }
   ROUTE(node, node->pred, node->pred_fd);
   ROUTE(node, node->succ, node->succ_fd);
+  fprintf(stdout, "Terminei de enviar mensagens de ROUTE");
 }
 
 void ENTRY_Received(char aux_id[], char aux_IP[], char aux_TCP[], node *node, int fd)
@@ -701,8 +716,8 @@ void SUCC_Received(char aux_id[], char aux_IP[], char aux_TCP[], node *node, int
   strcpy(node->succ_two, aux_id);
   strcpy(node->succ_two_IP, aux_IP);
   strcpy(node->succ_two_TCP, aux_TCP);
-  // fprintf(stdout,"2º sucessor: %s %s %s", node->succ_two, node->succ_two_IP, node->succ_two_TCP);
-  // fprintf(stdout, "fd que guardo pos SUCC: %d\n", node->succ_fd);
+  fprintf(stdout,"2º sucessor: %s %s %s", node->succ_two, node->succ_two_IP, node->succ_two_TCP);
+  fprintf(stdout, "fd que guardo pos SUCC: %d\n", node->succ_fd);
 }
 
 void CHORD_Received(char aux_id[], node *node, int fd)
