@@ -75,7 +75,6 @@ void impl_select(node *node)
         FD_SET(node->chord_rec[i], &rfds);
       }
     }
-  }
 
   // fprintf(stdout, "fds no while: %i %i %i %i\n", fd, node->pred_fd, node->succ_fd, node->chord_fd);
   // fprintf(stdout, "maxfd: %i \n", maxfd);
@@ -140,7 +139,7 @@ void impl_select(node *node)
           close(node->chord_fd);
         }
         clean_node(node);
-        // ADICIONAR ALTERAR ROUTE
+        return;
       }
       else if ((node->succ == node->pred) && (node->self == node->pred))
       { // leave:check if único node/////
@@ -150,7 +149,7 @@ void impl_select(node *node)
           // fprintf(stdout,"Entrei mal!\n");
         }
         clean_node(node);
-        // ADICIONAR ALTERAR ROUTE
+        return;
       }
     }
     else if (strcmp(modo, "exit") == 0 || strcmp(modo, "x") == 0)
@@ -486,6 +485,7 @@ void impl_select(node *node)
   }
   /**********************************************************************/
   //}
+}
 }
 
 void choose_terminal_cmd(node *node, char readInter[])
