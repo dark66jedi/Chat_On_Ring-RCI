@@ -64,7 +64,7 @@ void clean_node(node *node){
   node->self[0] = '\0' ;      
   node->self_IP[0] = '\0';  
   node->self_TCP[0] = '\0'; 
-  node->pred[0] = '\0';
+  strcpy(node->pred,"");
   node->succ[0] = '\0';
   node->succ_IP[0] = '\0';
   node->succ_TCP[0] = '\0';
@@ -76,8 +76,7 @@ void clean_node(node *node){
   node->chord_TCP[0] = '\0';
   node->pred_left_bool = 0;
   node->ring_bool = 0;
-  node->chord_bool = 0;                  
-  node->n_chords = 0;                    
+  node->chord_bool = 0;                                    
   node->pred_fd = -1;
   node->succ_fd = -1;
   node->chord_fd = -1;
@@ -108,7 +107,21 @@ void search_index(node *node, char node_id[], int *index)
     if(strcmp(node_id, node->table_indexes[i]) == 0)
     {
       *index = i;
-      printf("\n\nSEARCH: %d", *index);
+      printf("\n\nSEARCH: %d\n", *index);
+      return;
+    }
+  }
+}
+
+void search_fd(node *node, int fd, int *index)
+{
+  *index = -1;
+  for (size_t i = 0; i < MAX_N_NODES; i++)
+  {
+    if(fd == node->chord_rec[i])
+    {
+      *index = i;
+      printf("\n\nsearch fd: %d\n", *index);
       return;
     }
   }
@@ -154,8 +167,9 @@ void initialize_tables(node *node)
     {
         for (k = 0; k < MAX_N_NODES; k++)
         {
-            strcpy(node->routing_table[i][k], "-");
+          strcpy(node->routing_table[i][k], "-");
         }
+        node->chord_rec[i] = -1;
     }
 
     // registra-se a ele próprio no table_indexes
@@ -164,14 +178,14 @@ void initialize_tables(node *node)
     strcpy(node->routing_table[node->filling_table_index][node->filling_table_index], node->self);
     node->filling_table_index = node->filling_table_index + 1;
 
-    if ((strcmp(node->succ, node->self) != 0))
+    if ((strcmp(node->succ, node->self) != 0)) //não for o 1º nó
     {
       strcpy(node->table_indexes[node->filling_table_index], node->succ);
       sprintf(buffer, "%s-%s", node->self, node->succ);
       strcpy(node->routing_table[node->filling_table_index][node->filling_table_index], buffer);
       node->filling_table_index = node->filling_table_index + 1;
     }
-    if ((strcmp(node->pred, node->self) != 0) && (strcmp(node->pred, "") != 0))
+    if ((strcmp(node->pred, node->self) != 0) && (strcmp(node->pred, "") != 0)) //não for o 1º nó e não tiver pred?
     {
       strcpy(node->table_indexes[node->filling_table_index], node->pred);
       sprintf(buffer, "%s-%s", node->self, node->pred);
@@ -219,7 +233,7 @@ void update_tables(node *node)
       {
         if (strlen(short_path) > strlen(node->routing_table[i][k]) || strcmp(short_path, "-") == 0)
         {
-          strcpy(short_path, node->routing_table[i][k]);
+          strcpy(short_path, node->routing_table[i][k]); //
         }
       }
     }

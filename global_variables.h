@@ -45,14 +45,13 @@ typedef struct node
   int pred_left_bool; //fica 1 quando o seu pred deu leave
   int ring_bool;
   int chord_bool;                   // boleano, se ainda não foi criada uma corda está a 0 senão está a 1
-  int n_chords;                     // numero de cordas estabelecidas quer sejam minhas ou não
   
   /* file descriptors necessários para o select*/
  // int listen_fd; não é especifico de cada nó, não me faz sentido que exista
   int pred_fd;
   int succ_fd;
   int chord_fd; //corda que EU criei
-  int chord_rec[20][2]; //id, fd
+  int chord_rec[30]; // fd
   /*********************************************/
 
   int filling_table_index;

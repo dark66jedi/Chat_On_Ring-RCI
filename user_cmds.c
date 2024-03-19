@@ -56,7 +56,7 @@ void join(char ring[], node *n)
     {
         // Falta comparar IPs e porto? 
         sscanf(after, "%s %s %s", connectid, connectIP, connectTCP); // escolher o primeiro nó na lista, para ser esse a que se liga
-        fprintf(stdout,"a quem em estou a conectar? %s %s %s \n", connectid, connectIP, connectTCP);
+        //fprintf(stdout,"a quem em estou a conectar? %s %s %s \n", connectid, connectIP, connectTCP);
         while (*after != '\0') // guardar nodes list para comparar
         {
             sscanf(after, "%s %s %s", aux_id, aux_IP, aux_TCP);
@@ -101,7 +101,7 @@ void join(char ring[], node *n)
 
         // ENTRY para o sucessor
         fd = ENTRY(connectIP, connectTCP, n);
-        fprintf(stdout,"A fd que criei é: %d\n", fd);
+       // fprintf(stdout,"A fd que criei é: %d\n", fd);
         // sucessor
         strcpy(n->succ, connectid);
         strcpy(n->succ_IP, connectIP);
@@ -128,7 +128,7 @@ void direct_join(char ring[], node *n, char buffer[])
     int fd = 0;
 
     sscanf(buffer, "%s %s %s %s", id, succid, succIP, succTCP);
-    fprintf(stdout, "Scanned : %s, TCP: %s/n",succIP, succTCP);
+    //fprintf(stdout, "Scanned : %s, TCP: %s/n",succIP, succTCP);
     if (strcmp(id, succid) == 0)
     {
         strcpy(n->succ, n->self);
@@ -183,8 +183,8 @@ void chord(node *n, char buffer[]){
             }
         }
         i=0;
-        fprintf(stdout,"Faço o Delete bem\n");
-        fprintf(stdout,"list1 id:%s\n", list[0].id);
+        //fprintf(stdout,"Faço o Delete bem\n");
+        //fprintf(stdout,"list1 id:%s\n", list[0].id);
         while(strcmp(list[i].id,n->self) == 0 || strcmp(list[i].id,n->pred) == 0 || strcmp(list[i].id,n->succ) == 0){
             i++;
         }
@@ -193,7 +193,6 @@ void chord(node *n, char buffer[]){
         strcpy(n->chord_TCP,list[i].TCP);
         n->chord_fd = CHORD(n->chord_IP, n->chord_TCP, n);
         n->chord_bool = 1;
-        n->n_chords++;
     }
 }
 
@@ -286,10 +285,15 @@ void show_path(node *node, char dest[])
 {
     if(strcmp(dest, node->self) != 0)
     {
-        int dest_index = 0;
+        int dest_index;
+        int i=0;
+        for(i=0; i<30; i++){
+            fprintf(stdout,"node table index %d: %s\n", i, node->table_indexes[i]);
+        }
 
         search_index(node, dest, &dest_index);
-        
+        fprintf(stdout,"\ndest_in: %d\n",dest_index);
+
         printf("\n=============| Caminho mais curto |=============\n\n");
 
         printf("Destino: %s\n", dest);

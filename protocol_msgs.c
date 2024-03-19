@@ -125,6 +125,7 @@ void ROUTE(node *node, char target_node[], int fd)
         {
             sprintf(msg_to_send, "ROUTE %s %s %s\n", node->self, node->table_indexes[i], node->short_paths_table[i]);
             fprintf(stdout, "mensagem ROUTE: %s\n", msg_to_send);
+            fprintf(stdout, "fd ROUTE: %d\n", fd);
             TCP_Client(NULL, NULL, msg_to_send, 1, fd);
         }
     }
@@ -137,7 +138,8 @@ void ROUTE(node *node, char target_node[], int fd)
 
 void ROUTE_Received(node *node, char origin_id[], char dest_id[], char path[])
 {
-    int origin_id_index = -1, dest_id_index = -1;
+    int origin_id_index, dest_id_index;
+    int teste;
     char new_node[3] = "";
     char new_path[50] = "";
 
@@ -165,7 +167,7 @@ void ROUTE_Received(node *node, char origin_id[], char dest_id[], char path[])
 
         if (strlen(new_path) != strlen(node->routing_table[dest_id_index][origin_id_index]))
         {
-            strcpy(node->routing_table[dest_id_index][origin_id_index], path);
+            strcpy(node->routing_table[dest_id_index][origin_id_index], new_path);
             update_tables(node);
             ROUTE(node, node->pred, node->pred_fd);
             ROUTE(node, node->succ, node->succ_fd);
@@ -173,16 +175,17 @@ void ROUTE_Received(node *node, char origin_id[], char dest_id[], char path[])
     }
     else
     {
-        sprintf(new_path, "%s-%s", node->self, origin_id);
+        sprintf(new_path, "%s", node->self);
 
         if (strlen(new_path) != strlen(node->routing_table[dest_id_index][origin_id_index]))
         {
-            strcpy(node->routing_table[dest_id_index][origin_id_index], path);
+            strcpy(node->routing_table[dest_id_index][origin_id_index], new_path);
             update_tables(node);
             ROUTE(node, node->pred, node->pred_fd);
             ROUTE(node, node->succ, node->succ_fd);
         }
     } 
+    update_tables(node);
 }
 
 void CHAT(node *node, char i[], char n[], char message[]){
