@@ -265,7 +265,6 @@ void show_routing(node *node, char dest[])
         printf("\u2022Pelo vizinho %s: %s\n", node->pred, node->routing_table[dest_index][pred_index]);
         printf("\u2022Pelo vizinho %s: %s\n", node->succ, node->routing_table[dest_index][succ_index]);
         
-
         printf("\n================================================\n\n");
     }
     else
@@ -276,7 +275,6 @@ void show_routing(node *node, char dest[])
         printf("\u2022Pelo vizinho %s: %s\n", node->pred, "-");
         printf("\u2022Pelo vizinho %s: %s\n", node->succ, "-");
         
-
         printf("\n================================================\n\n");
     }
 }

@@ -617,8 +617,14 @@ void choose_terminal_cmd(node *node, char readInter[])
   else if ((strcmp(modo, "show") == 0) || (strcmp(modo, "sr") == 0))
   {
     sscanf(readInter, "%s %s %s", modo, modo2, dest);
-    if ((strcmp(modo2, "routing") == 0) || (strcmp(modo, "sr") == 0))
+    if ((strcmp(modo2, "path") == 0))
     {
+      sscanf(readInter, "%s %s %s", modo, modo2, dest);
+      show_routing(node, dest);
+    }
+    else if (strcmp(modo, "sr") == 0)
+    {
+      sscanf(readInter, "%s %s", modo, dest);
       show_routing(node, dest);
     }
     else
