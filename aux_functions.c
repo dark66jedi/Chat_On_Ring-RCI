@@ -205,6 +205,7 @@ void initialize_tables(node *node)
           strcpy(node->routing_table[i][k], "-");
         }
         node->chord_rec[i] = -1;
+        strcpy(node->table_indexes[i], "--");
     }
 
     // registra-se a ele próprio no table_indexes
@@ -243,9 +244,12 @@ void update_neighbour(node *node, char old_neighbour[], char new_neighbour[])
   {
     search_index(node, old_neighbour, &old_neighbour_index);
 
-    for (size_t i = 0; i < MAX_N_NODES; i++)
+    if (old_neighbour_index != -1)
     {
-      strcpy(node->routing_table[i][old_neighbour_index], "-");
+      for (size_t i = 0; i < MAX_N_NODES; i++)
+      {
+        strcpy(node->routing_table[i][old_neighbour_index], "-");
+      }
     }
   }
   if(new_neighbour != NULL)

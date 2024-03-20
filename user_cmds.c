@@ -282,7 +282,19 @@ void show_routing(node *node, char dest[])
 
         printf("\n==========| Tabela de encaminhamento |==========\n\n");
 
-        printf("Destino: %s\n", dest);
+        printf("Destino: %s\n\n", dest);
+        // for (size_t i = 0; i < 10; i++)
+        // {
+        //     printf("%s", node->table_indexes[i]);
+        // }
+        // printf("\n");
+        // for(size_t i = 0; i < 10; i++){
+        //     for (size_t k = 0; k < 10; k++)
+        //     {
+        //         printf("%s\t", node->routing_table[i][k]);
+        //     }
+        //     printf("\n");
+        // }
         printf("\u2022Pelo vizinho %s: %s\n", node->pred, node->routing_table[dest_index][pred_index]);
         printf("\u2022Pelo vizinho %s: %s\n", node->succ, node->routing_table[dest_index][succ_index]);
 
@@ -334,27 +346,19 @@ void show_path(node *node, char dest[])
 
 void show_forwarding(node *node)
 {
-    char dest[3]; // Duarrte
-    if (strcmp(dest, node->self) != 0)
+    int dest_index = 0;
+
+    printf("\n============| Tabela de expedição |============\n\n");
+
+    for (size_t i = 0; i < MAX_N_NODES; i++)
     {
-        int dest_index = 0;
-
-        search_index(node, dest, &dest_index);
-
-        printf("\n============| Tabela de expedição |============\n\n");
-
-        printf("Ainda por fazer código %s\n", dest);
-        // printf("\u2022Caminho mais curto: %s\n", node->short_paths_table[dest_index]);
-
-        printf("\n===============================================\n\n");
+        search_index(node, node->table_indexes[i], &dest_index);
+        if (dest_index != -1)
+        {
+            printf("Destino: %s\n", node->table_indexes[i]);
+            printf("\u2022 Nó a seguir: %s\n", node->expedition_table[dest_index]);
+        }
     }
-    else
-    {
-        printf("\n============| Tabela de expedição |============\n\n");
 
-        printf("Destino: %s\n", dest);
-        printf("\u2022Caminho mais curto: %s\n", node->self);
-
-        printf("\n===============================================\n\n");
-    }
+    printf("\n===============================================\n\n");
 }

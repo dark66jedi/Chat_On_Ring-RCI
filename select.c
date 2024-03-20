@@ -15,7 +15,6 @@ void impl_select(node *node)
   char buffer[500];
   char readInter[128];
   char modo[20];
-  char node_left[3];
   int i = 0;
   int fd_index = 0;
 
@@ -211,7 +210,7 @@ void impl_select(node *node)
         if (strcmp(node->self, node->succ_two) == 0)
         {
           // caso 2 nós, 1 vai sair e vai ficar só 1
-          strcpy(node_left, node->succ);
+          strcpy(node->node_left, node->succ);
           strcpy(node->succ, node->succ_two);
           strcpy(node->succ_IP, node->succ_two_IP);
           strcpy(node->succ_TCP, node->succ_two_TCP);
@@ -226,13 +225,12 @@ void impl_select(node *node)
           node->succ_fd = -1;
           node->chord_fd = -1;
           // atualizar tabelas
-          update_neighbour(node, node_left, node->succ);
-          node_left[0] = '\0';
+          update_neighbour(node, node->node_left, node->succ);
         }
         else if (strcmp(node->self, node->succ_two) != 0 && strcmp(node->pred, node->succ_two) == 0)
         {
           // passar de 3 para 2 nós
-          strcpy(node_left, node->succ);
+          strcpy(node->node_left, node->succ);
           strcpy(node->succ, node->succ_two);
           strcpy(node->succ_IP, node->succ_two_IP);
           strcpy(node->succ_TCP, node->succ_two_TCP);
@@ -242,15 +240,14 @@ void impl_select(node *node)
           node->succ_fd = PRED(node->succ_IP, node->succ_TCP, node, 0);
 
           // atualizar tabelas
-          update_neighbour(node, node_left, node->succ);
-          node_left[0] = '\0';
+          update_neighbour(node, node->node_left, node->succ);
           // enviar route
           ROUTE(node, node->pred, node->pred_fd);
           ROUTE(node, node->succ, node->succ_fd);
         }
         else
         {
-          strcpy(node_left, node->succ);
+          strcpy(node->node_left, node->succ);
           strcpy(node->succ, node->succ_two);
           strcpy(node->succ_IP, node->succ_two_IP);
           strcpy(node->succ_TCP, node->succ_two_TCP);
@@ -259,8 +256,7 @@ void impl_select(node *node)
           node->succ_fd = PRED(node->succ_IP, node->succ_TCP, node, 0);
 
           // atualizar tabelas
-          update_neighbour(node, node_left, node->succ);
-          node_left[0] = '\0';
+          update_neighbour(node, node->node_left, node->succ);
           // enviar route
           ROUTE(node, node->pred, node->pred_fd);
           ROUTE(node, node->succ, node->succ_fd);
@@ -309,13 +305,15 @@ void impl_select(node *node)
           node->pred_left_bool = 1;
           close(node->pred_fd);
           node->pred_fd = -1;
+          update_neighbour(node,node->node_left, node->pred);
         }
-        else
+        else //possivelmente a pagar
         {
           strcpy(node->node_left, node->pred);
           node->pred_left_bool = 1;
           close(node->pred_fd);
           node->pred_fd = -1;
+          update_neighbour(node,node->node_left, node->pred);
         }
       }
     }
@@ -687,7 +685,6 @@ void impl_select(node *node)
 
     // atualizar tabelas
     update_neighbour(node, node->node_left, node->succ);
-    node->node_left[0] = '\0';
     // enviar route
     ROUTE(node, node->pred, node->pred_fd);
     ROUTE(node, node->succ, node->succ_fd);
@@ -712,10 +709,10 @@ void impl_select(node *node)
     int lixo = 0;
 
     if (fd == node->succ_fd)
-    {
+    { //recebi um ENTRY NOT ME
       close(node->succ_fd);
       node->succ_fd = PRED(aux_IP, aux_TCP, node, 0);
-      update_neighbour(node, node->succ, aux_id);     // essencialmente não está a estragar nada porque só apaga as entradas nas tabelas
+      strcpy(node->node_left,node->succ);
       strcpy(node->succ_two, node->succ);
       strcpy(node->succ_two_IP, node->succ_IP);
       strcpy(node->succ_two_TCP, node->succ_TCP);
@@ -724,12 +721,12 @@ void impl_select(node *node)
       strcpy(node->succ_TCP, aux_TCP);
       show_topology(node);
       lixo = SUCC("0", "0", node, 1);
+      update_neighbour(node, node->node_left, node->succ);     // essencialmente não está a estragar nada porque só apaga as entradas nas tabelas
     }
     else
     { // caso de novo nó
       if (strcmp(node->pred, node->self) == 0)
       { // caso em que ainda só são 2 nós na rede
-        update_neighbour(node, node->pred, aux_id);     // essencialmente não está a estragar nada porque só apaga as entradas nas tabelas
         strcpy(node->pred, aux_id);
         node->pred_fd = fd;
         strcpy(node->succ, aux_id);
@@ -742,8 +739,10 @@ void impl_select(node *node)
       { //+2 nós
         ENTRY_not_me("0", "0", node, aux_id, aux_IP, aux_TCP);
         node->pred_fd = fd;
+        strcpy(node->node_left,node->pred);
         strcpy(node->pred, aux_id);
         lixo = SUCC(aux_IP, aux_TCP, node, 1);
+        update_neighbour(node, node->node_left, node->pred);
       }
     }
   }
