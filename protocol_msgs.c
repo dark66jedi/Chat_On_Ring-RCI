@@ -142,30 +142,19 @@ void ROUTE_Received(node *node, char origin_id[], char dest_id[], char path[])
     int teste;
     char new_node[3] = "";
     char new_path[50] = "";
-
-    printf("\n\n:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::\n");
-    printf("\norigin_id: %s", origin_id);
-    printf("\ndest_id: %s", dest_id);
-    printf("\npath: %s", path);
-    printf("\n:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::\n\n");
-    
+    int im_in_path;
 
     check_for_new_node(node, path);
+    check_for_self_in_path(node, path, &im_in_path);
 
     search_index(node, origin_id, &origin_id_index);
-    search_index(node, dest_id, &dest_id_index);
-
-    printf("\norigin_id_index: %d", origin_id_index);
-    printf("\ndest_id_index: %d", dest_id_index);
-    printf("\n%d", node->filling_table_index);
-    printf("\n:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::\n\n");
-    
+    search_index(node, dest_id, &dest_id_index);    
 
     if(strcmp(node->self, dest_id) != 0)
     {
         sprintf(new_path, "%s-%s", node->self, path);
 
-        if (strlen(new_path) != strlen(node->routing_table[dest_id_index][origin_id_index]))
+        if (strlen(new_path) != strlen(node->routing_table[dest_id_index][origin_id_index]) && im_in_path == 0)
         {
             strcpy(node->routing_table[dest_id_index][origin_id_index], new_path);
             update_tables(node);

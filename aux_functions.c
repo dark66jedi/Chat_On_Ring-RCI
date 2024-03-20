@@ -132,7 +132,6 @@ void check_for_new_node(node *node, char path[])
   char node_to_check[3] = "";
   int i = 0, path_i = 0;
   int index;
-  char result[100];
 
   while(path_i < strlen(path))
   {
@@ -150,6 +149,35 @@ void check_for_new_node(node *node, char path[])
     {
       strcpy(node->table_indexes[node->filling_table_index], node_to_check);
       node->filling_table_index = node->filling_table_index + 1;
+    }
+
+    if (path_i>(strlen(path)-3)) break;
+  
+    path_i++;
+  }
+}
+
+void check_for_self_in_path(node *node, char path[], int *is_in_path)
+{
+  char node_to_check[3] = "";
+  int i = 0, path_i = 0;
+  int index;
+
+  *is_in_path = 0;
+  while(path_i < strlen(path))
+  {
+    i = 0;
+    node_to_check[i] = path[path_i];
+    i++;
+    path_i++;
+    node_to_check[i] = path[path_i];
+    i++;
+    path_i++;
+
+    if (strcmp(node_to_check, node->self) == 0)
+    {
+      *is_in_path = 1;
+      return;
     }
 
     if (path_i>(strlen(path)-3)) break;
@@ -213,9 +241,12 @@ void update_neighbour(node *node, char old_neighbour[], char new_neighbour[])
       strcpy(node->routing_table[i][old_neighbour_index], "-");
     }
   }
-  
-  strcpy(node->table_indexes[node->filling_table_index], new_neighbour);
-  node->filling_table_index = node->filling_table_index + 1;
+  if(new_neighbour != NULL)
+  {
+    strcpy(node->table_indexes[node->filling_table_index], new_neighbour);
+    node->filling_table_index = node->filling_table_index + 1;
+  }
+  update_tables(node);
 }
 
 void update_tables(node *node)
