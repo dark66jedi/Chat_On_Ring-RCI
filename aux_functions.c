@@ -107,7 +107,6 @@ void search_index(node *node, char node_id[], int *index)
     if(strcmp(node_id, node->table_indexes[i]) == 0)
     {
       *index = i;
-      printf("\n\nSEARCH: %d\n", *index);
       return;
     }
   }
@@ -121,7 +120,6 @@ void search_fd(node *node, int fd, int *index)
     if(fd == node->chord_rec[i])
     {
       *index = i;
-      printf("\n\nsearch fd: %d\n", *index);
       return;
     }
   }

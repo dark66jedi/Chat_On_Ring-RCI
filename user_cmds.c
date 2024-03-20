@@ -200,6 +200,8 @@ void chord(node *n)
 
 void remove_chord(node *n)
 {
+
+    int fd_index = 0;
     n->chord_bool = 0;
     close(n->chord_fd);
     n->chord[0] = '\0';
@@ -207,18 +209,18 @@ void remove_chord(node *n)
     n->chord_TCP[0] = '\0';
     // Atualizar caminhos
     update_neighbour(n, n->chord, NULL);
-    ROUTE(node, node->pred, node->pred_fd);
-    ROUTE(node, node->succ, node->succ_fd);
-    if (node->chord_bool == 1)
+    ROUTE(n, n->pred, n->pred_fd);
+    ROUTE(n, n->succ, n->succ_fd);
+    if (n->chord_bool == 1)
     {
-        ROUTE(node, node->chord, node->chord_fd);
+        ROUTE(n, n->chord, n->chord_fd);
     }
     for (size_t j = 0; j < MAX_N_NODES; j++)
     {
-        if (node->chord_rec[j] != -1)
+        if (n->chord_rec[j] != -1)
         {
-            search_fd(node, node->chord_rec[j], &fd_index);
-            ROUTE(node, node->table_indexes[fd_index], node->chord_rec[j]);
+            search_fd(n, n->chord_rec[j], &fd_index);
+            ROUTE(n, n->table_indexes[fd_index], n->chord_rec[j]);
         }
     }
     return;
