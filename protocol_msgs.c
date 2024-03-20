@@ -51,8 +51,6 @@ void ENTRY_not_me(char connectIP[], char connectTCP[], node *node, char aux_id[]
     strcat(msg_to_send, " ");
     strcat(msg_to_send, aux_TCP);
     strcat(msg_to_send, "\n");
-    fprintf(stdout,"Enviei ENTRY not me: %s", msg_to_send);
-    //printf("pred_fd: %d\n", node->pred_fd);
 
     fd = TCP_Client(connectIP, connectTCP, msg_to_send, 1, node->pred_fd);
 }
@@ -63,7 +61,6 @@ int ENTRY(char connectIP[], char connectTCP[], node *node)
     int fd = 0;
     
     sprintf(msg_to_send,"ENTRY %s %s %s\n",node->self, node->self_IP,node->self_TCP);
-    fprintf(stdout, "Enviei ENTRY: %s", msg_to_send);
 
     fd = TCP_Client(connectIP, connectTCP, msg_to_send, 0, 0);
     return fd;
@@ -74,14 +71,11 @@ int PRED(char connectIP[], char connectTCP[], node *node, int sock_created)
     char msg_to_send[100];
     int fd = 0;
     sprintf(msg_to_send,"PRED %s\n",node->self);
-    //fprintf(stdout, "Enviei para: %s %s", connectIP, connectTCP);
-    fprintf(stdout, "ESTOU A ENVIAR PRED: \n");
 
     if(sock_created==0){
-        fd = TCP_Client(connectIP, connectTCP, msg_to_send, sock_created, 0); //não existe ainda, logo vai criar
+        fd = TCP_Client(connectIP, connectTCP, msg_to_send, sock_created, 0); 
     } else{
         fd = TCP_Client(connectIP, connectTCP, msg_to_send, sock_created, node->succ_fd);
-        //fprintf(stdout, "fd: %i\n", fd);
     }
     return fd;
 }
@@ -92,9 +86,6 @@ int SUCC(char connectIP[], char connectTCP[], node *node, int sock_created)
     int fd = 0;
 
     sprintf(msg_to_send,"SUCC %s %s %s\n",node->succ, node->succ_IP,node->succ_TCP);
-    fprintf(stdout, "Enviei SUCC: %s\n", msg_to_send);
-   // fprintf(stdout, "node->pred_fd_send %i\n", node->pred_fd_send);
-//    fprintf(stdout, "node->self %s\n", node->self);
 
     fd = TCP_Client(connectIP, connectTCP, msg_to_send, 1, node->pred_fd);
     return fd;
@@ -105,10 +96,7 @@ int CHORD(char connectIP[], char connectTCP[], node *node)
     char msg_to_send[100];
     int fd = 0;
     
-    sprintf(msg_to_send,"CHORD: %s\n",node->self);
-    fprintf(stdout,"mensagem CHORD: %s\n",msg_to_send);
-    fprintf(stdout,"TCP: %s\n",connectIP);
-    fprintf(stdout,"Porto: %s\n",connectTCP);
+    sprintf(msg_to_send,"CHORD %s\n",node->self);
 
     fd = TCP_Client(connectIP, connectTCP, msg_to_send, 0, 0); 
     return fd;

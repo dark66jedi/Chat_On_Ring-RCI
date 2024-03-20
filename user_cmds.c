@@ -7,7 +7,8 @@ typedef struct nodeslist
     char TCP[30];
 } nodeslist;
 
-void leave(node *n){
+void leave(node *n)
+{
     char answer[500];
 
     UNREG(n->ring, answer, n);
@@ -28,12 +29,12 @@ void join(char ring[], node *n)
     nodeslist list[16];
     char aux_id[3], aux_IP[50], aux_TCP[30];
     int new = 0;
-    int i = 0, j =0;
+    int i = 0, j = 0;
     int fd = 0;
 
     NODES(ring, answer);
     char *after = DeleteMethod(answer);
-   // printf("after: %s\n", after);
+    // printf("after: %s\n", after);
     if (strcmp(after, "\0") == 0) // caso em que não há ainda nós no anel
     {
         REG(ring, answer, n);
@@ -52,11 +53,11 @@ void join(char ring[], node *n)
         strcpy(n->succ_two_TCP, n->self_TCP);
         n->ring_bool = 1;
     }
-    else 
+    else
     {
-        // Falta comparar IPs e porto? 
+        // Falta comparar IPs e porto?
         sscanf(after, "%s %s %s", connectid, connectIP, connectTCP); // escolher o primeiro nó na lista, para ser esse a que se liga
-        //fprintf(stdout,"a quem em estou a conectar? %s %s %s \n", connectid, connectIP, connectTCP);
+        // fprintf(stdout,"a quem em estou a conectar? %s %s %s \n", connectid, connectIP, connectTCP);
         while (*after != '\0') // guardar nodes list para comparar
         {
             sscanf(after, "%s %s %s", aux_id, aux_IP, aux_TCP);
@@ -65,13 +66,13 @@ void join(char ring[], node *n)
             strcpy(list[i].TCP, aux_TCP);
             after = DeleteMethod(after);
             i++;
-            if (*after == '\0') //acho que não está aqui a fazer nada
+            if (*after == '\0') // acho que não está aqui a fazer nada
             {
                 break;
             }
         }
-        //j= i-1;
-        //printf("j:%d", j);
+        // j= i-1;
+        // printf("j:%d", j);
         /*for(i=i-1;i>=0;--i){
             printf("\n");
             printf("i=%i\n",i);
@@ -81,7 +82,7 @@ void join(char ring[], node *n)
             printf("\n");
         } */
 
-        for (j = i-1; j >= 0; j--) //caso em que já existe esse id
+        for (j = i - 1; j >= 0; j--) // caso em que já existe esse id
         {
             if (strcmp(list[j].id, n->self) == 0)
             {
@@ -101,14 +102,14 @@ void join(char ring[], node *n)
 
         // ENTRY para o sucessor
         fd = ENTRY(connectIP, connectTCP, n);
-       // fprintf(stdout,"A fd que criei é: %d\n", fd);
+        // fprintf(stdout,"A fd que criei é: %d\n", fd);
         // sucessor
         strcpy(n->succ, connectid);
         strcpy(n->succ_IP, connectIP);
         strcpy(n->succ_TCP, connectTCP);
-        n->succ_fd = fd; 
+        n->succ_fd = fd;
         // registar servidor de nós
-        REG(ring, answer, n); //só devia fazer isto se o resto der certo?
+        REG(ring, answer, n); // só devia fazer isto se o resto der certo?
         if (strcmp(answer, "OKREG") != 0)
         {
             printf("Erro no registo do nó no anel");
@@ -128,7 +129,7 @@ void direct_join(char ring[], node *n, char buffer[])
     int fd = 0;
 
     sscanf(buffer, "%s %s %s %s", id, succid, succIP, succTCP);
-    //fprintf(stdout, "Scanned : %s, TCP: %s/n",succIP, succTCP);
+    // fprintf(stdout, "Scanned : %s, TCP: %s/n",succIP, succTCP);
     if (strcmp(id, succid) == 0)
     {
         strcpy(n->succ, n->self);
@@ -150,23 +151,25 @@ void direct_join(char ring[], node *n, char buffer[])
         strcpy(n->succ_TCP, succTCP);
         n->succ_fd = fd;
         n->ring_bool = 1;
-        //fprintf(stdout,"Ring do anel: %s\n", n->ring);
+        // fprintf(stdout,"Ring do anel: %s\n", n->ring);
     }
 
     initialize_tables(n);
-    
 }
 
-void chord(node *n, char buffer[]){
+void chord(node *n)
+{
     nodeslist list[16];
     char answer[500];
     char aux_id[3], aux_IP[50], aux_TCP[30];
     int i = 0;
 
-    if (strcmp(n->succ_two,n->self) == 0 || strcmp(n->succ_two,n->pred) == 0){ //caso de só existir 1, 2 ou 3 aneis no anel
-        fprintf(stdout,"O anel tem 3 ou menos nós. Não existem nós com os quais é possível criar uma corda!");
-    } else{
-        fprintf(stdout,"Entrei no chord\n");
+    if (strcmp(n->succ_two, n->self) == 0 || strcmp(n->succ_two, n->pred) == 0)
+    { // caso de só existir 1, 2 ou 3 aneis no anel
+        fprintf(stdout, "O anel tem 3 ou menos nós. Não existem nós com os quais é possível criar uma corda!");
+    }
+    else
+    {
         NODES(n->ring, answer);
         char *after = DeleteMethod(answer);
         while (*after != '\0') // guardar nodes list para comparar
@@ -177,37 +180,53 @@ void chord(node *n, char buffer[]){
             strcpy(list[i].TCP, aux_TCP);
             after = DeleteMethod(after);
             i++;
-            if (*after == '\0') //acho que não está aqui a fazer nada
+            if (*after == '\0') // acho que não está aqui a fazer nada
             {
                 break;
             }
         }
-        i=0;
-        //fprintf(stdout,"Faço o Delete bem\n");
-        //fprintf(stdout,"list1 id:%s\n", list[0].id);
-        while(strcmp(list[i].id,n->self) == 0 || strcmp(list[i].id,n->pred) == 0 || strcmp(list[i].id,n->succ) == 0){
+        i = 0;
+        while (strcmp(list[i].id, n->self) == 0 || strcmp(list[i].id, n->pred) == 0 || strcmp(list[i].id, n->succ) == 0)
+        {
             i++;
         }
-        strcpy(n->chord,list[i].id);
-        strcpy(n->chord_IP,list[i].IP);
-        strcpy(n->chord_TCP,list[i].TCP);
+        strcpy(n->chord, list[i].id);
+        strcpy(n->chord_IP, list[i].IP);
+        strcpy(n->chord_TCP, list[i].TCP);
         n->chord_fd = CHORD(n->chord_IP, n->chord_TCP, n);
         n->chord_bool = 1;
     }
 }
 
-void remove_chord(node *n){
+void remove_chord(node *n)
+{
     n->chord_bool = 0;
     close(n->chord_fd);
-    n->chord[0] = '\0'; 
-    n->chord_IP[0] = '\0'; 
-    n->chord_TCP[0] = '\0'; 
-    //Atualizar caminhos
+    n->chord[0] = '\0';
+    n->chord_IP[0] = '\0';
+    n->chord_TCP[0] = '\0';
+    // Atualizar caminhos
+    update_neighbour(n, n->chord, NULL);
+    ROUTE(node, node->pred, node->pred_fd);
+    ROUTE(node, node->succ, node->succ_fd);
+    if (node->chord_bool == 1)
+    {
+        ROUTE(node, node->chord, node->chord_fd);
+    }
+    for (size_t j = 0; j < MAX_N_NODES; j++)
+    {
+        if (node->chord_rec[j] != -1)
+        {
+            search_fd(node, node->chord_rec[j], &fd_index);
+            ROUTE(node, node->table_indexes[fd_index], node->chord_rec[j]);
+        }
+    }
     return;
 }
 
-void message(node *n, char dest[], char message[]){
-    CHAT(n,n->self,dest,message);
+void message(node *n, char dest[], char message[])
+{
+    CHAT(n, n->self, dest, message);
 }
 
 void show_topology(node *node)
@@ -230,7 +249,7 @@ void show_topology(node *node)
     printf("\t\u2022 IP: %s \n", node->succ_two_IP);
     printf("\t\u2022 Porto: %s \n\n", node->succ_two_TCP);
 
-    //Não esquecer de tirar
+    // Não esquecer de tirar
     printf("\tSeu predecessor:\n");
     printf("\t\u2022 id: %s \n\n", node->pred);
 
@@ -251,20 +270,20 @@ void show_topology(node *node)
 
 void show_routing(node *node, char dest[])
 {
-    if(strcmp(dest, node->self) != 0)
+    if (strcmp(dest, node->self) != 0)
     {
         int dest_index = 0, pred_index = 0, succ_index = 0;
 
         search_index(node, dest, &dest_index);
         search_index(node, node->pred, &pred_index);
         search_index(node, node->succ, &succ_index);
-        
+
         printf("\n==========| Tabela de encaminhamento |==========\n\n");
 
         printf("Destino: %s\n", dest);
         printf("\u2022Pelo vizinho %s: %s\n", node->pred, node->routing_table[dest_index][pred_index]);
         printf("\u2022Pelo vizinho %s: %s\n", node->succ, node->routing_table[dest_index][succ_index]);
-        
+
         printf("\n================================================\n\n");
     }
     else
@@ -274,23 +293,24 @@ void show_routing(node *node, char dest[])
         printf("Destino: %s\n", dest);
         printf("\u2022Pelo vizinho %s: %s\n", node->pred, "-");
         printf("\u2022Pelo vizinho %s: %s\n", node->succ, "-");
-        
+
         printf("\n================================================\n\n");
     }
 }
 
 void show_path(node *node, char dest[])
 {
-    if(strcmp(dest, node->self) != 0)
+    if (strcmp(dest, node->self) != 0)
     {
         int dest_index;
-        int i=0;
-        for(i=0; i<30; i++){
-            fprintf(stdout,"node table index %d: %s\n", i, node->table_indexes[i]);
+        int i = 0;
+        for (i = 0; i < 30; i++)
+        {
+            fprintf(stdout, "node table index %d: %s\n", i, node->table_indexes[i]);
         }
 
         search_index(node, dest, &dest_index);
-        fprintf(stdout,"\ndest_in: %d\n",dest_index);
+        fprintf(stdout, "\ndest_in: %d\n", dest_index);
 
         printf("\n=============| Caminho mais curto |=============\n\n");
 
@@ -307,22 +327,22 @@ void show_path(node *node, char dest[])
         printf("\u2022Caminho mais curto: %s\n", node->self);
 
         printf("\n================================================\n\n");
-    }    
+    }
 }
 
 void show_forwarding(node *node)
 {
-    char dest[3]; //Duarrte
-    if(strcmp(dest, node->self) != 0)
+    char dest[3]; // Duarrte
+    if (strcmp(dest, node->self) != 0)
     {
         int dest_index = 0;
 
         search_index(node, dest, &dest_index);
-        
+
         printf("\n============| Tabela de expedição |============\n\n");
 
-        printf("Destino: %s\n", dest);
-        printf("\u2022Caminho mais curto: %s\n", node->short_paths_table[dest_index]);
+        printf("Ainda por fazer código %s\n", dest);
+        // printf("\u2022Caminho mais curto: %s\n", node->short_paths_table[dest_index]);
 
         printf("\n===============================================\n\n");
     }
@@ -334,5 +354,5 @@ void show_forwarding(node *node)
         printf("\u2022Caminho mais curto: %s\n", node->self);
 
         printf("\n===============================================\n\n");
-    }    
+    }
 }

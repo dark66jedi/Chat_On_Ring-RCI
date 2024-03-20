@@ -7,7 +7,7 @@ void impl_select(node *node)
   fd_set rfds;
   struct addrinfo hints, *res;
   int maxfd = 0, newfd = 0, fd = 0;
-  int errcode_listen_tdp, errcode_pred_tcp, errcode_succ_tcp, errcode_chord_tcp;
+  int errcode_listen_tcp, errcode_pred_tcp, errcode_succ_tcp, errcode_chord_tcp;
   struct sockaddr addr;
   socklen_t addrlen;
   int counter = 0, nread = 0, n = 0;
@@ -22,18 +22,18 @@ void impl_select(node *node)
   /* socket de escuta tcp (receber informação de nós fora do ring)*/
   if ((fd = socket(AF_INET, SOCK_STREAM, 0)) == -1)
   {
-    printf("Erro na criação da socket tcp");
+    printf("Erro na criação da socket tcp\n");
+    perror("fd");
     exit(0);
   }
-  perror("fd");
-  fprintf(stdout, "fd: %d\n", fd);
   memset(&hints, 0, sizeof hints);
   hints.ai_family = AF_INET;       // IPv4
   hints.ai_socktype = SOCK_STREAM; // TCP socket
   hints.ai_flags = AI_PASSIVE;
-  if ((errcode_listen_tdp = getaddrinfo(NULL, TCP_global, &hints, &res)) != 0)
+  if ((errcode_listen_tcp = getaddrinfo(NULL, TCP_global, &hints, &res)) != 0)
   {
     printf("Erro getaddrinfo tcp");
+    perror("errcode_listen_tcp");
     exit(1);
   }
   if (bind(fd, res->ai_addr, res->ai_addrlen) == -1)
@@ -46,15 +46,12 @@ void impl_select(node *node)
     printf("Erro listen tcp");
     exit(1);
   }
-  // fprintf(stdout, "socket de escuta fd: %d\n", fd);
   while (1)
   { // ACTUALLY select
     FD_ZERO(&rfds);
     FD_SET(0, &rfds);
     FD_SET(fd, &rfds);
     maxfd = max(fd, node->pred_fd, node->succ_fd, node->chord_fd);
-    // fprintf(stdout, "fd: %d, node->pred_fd: %d, node->succ_fd: %d, node->chord_fd: %d\n", fd, node->pred_fd, node->succ_fd, node->chord_fd);
-    // fprintf(stdout, "Maxfd: %d\n", maxfd);
     if (node->pred_fd > 0)
     {
       FD_SET(node->pred_fd, &rfds); // só se pode dar set se existir
@@ -75,33 +72,14 @@ void impl_select(node *node)
       }
     }
 
-    // fprintf(stdout, "fds no while: %i %i %i %i\n", fd, node->pred_fd, node->succ_fd, node->chord_fd);
-    // fprintf(stdout, "maxfd: %i \n", maxfd);
-
-    // printf("File descriptors inside rfds before calling select: \n");
-    // int j = 0;
-    // for (int j = 0; j < maxfd; j++) {
-    //     if (FD_ISSET(j, &rfds)) {
-    //         fprintf(stdout, "fd a ser ouvido: %d\n ", j);
-    //     }
-    // }
-
     counter = select(maxfd + 1, &rfds, (fd_set *)NULL, (fd_set *)NULL, (struct timeval *)NULL);
-    fprintf(stdout, "Pós select\n");
-    perror("Erro ao abrir o arquivo");
-    // printf("Error opening file: %s\n", strerror(errno));
-    // fprintf(stdout, "counter select %d\n", counter);
-
-    // The select function returns the number of file descriptors (the number of bits from readfds, writefds, and errorfds).
-    if (counter == 0)
-    {
-      // probably não vamos usar
+    if(counter == -1){
+      perror("Erro ao abrir o arquivo");
     }
 
     /* fd responsável pelo terminal****************************************/
     if (FD_ISSET(0, &rfds))
     {
-      fprintf(stdout, "Terminal\n");
       FD_CLR(0, &rfds);
       if (fgets(readInter, sizeof(readInter), stdin) != NULL)
       {
@@ -114,112 +92,241 @@ void impl_select(node *node)
           }
           else
           {
-            fprintf(stdout, "Comando inválido. O nó ainda não faz parte de um ring. Por favor, escolha um comando válido. \n");
+            fprintf(stdout, "Comando inválido. O nó ainda não faz parte de um anel. Por favor, escolha um comando válido. \n");
             Interface(node);
             fgets(readInter, sizeof(readInter), stdin);
             sscanf(readInter, "%s", modo);
           }
         }
       }
-      // fprintf(stdout, "%s\n", modo);
       if (strcmp(modo, "leave") == 0 || strcmp(modo, "l") == 0)
       {
-        fprintf(stdout, "Entrei no leave\n");
-        if (node->self != node->pred) // 2+ nós
+        if (strcmp(node->self, node->pred) != 0) // 2+ nós
         {
-          // fprintf(stdout,"Ring: %s\n", node->ring);
           if (strcmp(node->ring, "\0") != 0)
-          {
             leave(node);
-            // fprintf(stdout,"Entrei mal se fui djoin!\n");
-          }
-          close(node->pred_fd);
-          close(node->succ_fd);
-          if (node->chord_bool == 1)
-          {
-            close(node->chord_fd);
-          }
-          clean_node(node);
-          FD_ZERO(&rfds);
-          freeaddrinfo(res);
-          fprintf(stdout, "fd antes do leave: %d", fd);
-          close(fd);
-          return;
         }
-        else if ((node->succ == node->pred) && (node->self == node->pred))
-        { // leave:check if único node/////
-          if (strcmp(node->ring, "\0") != 0)
-          {
-            leave(node);
-            // fprintf(stdout,"Entrei mal!\n");
-          }
-          clean_node(node);
-          FD_ZERO(&rfds);
-          freeaddrinfo(res);
-          close(fd);
-          return;
+        close(node->pred_fd);
+        close(node->succ_fd);
+        if (node->chord_bool == 1)
+        {
+          close(node->chord_fd);
         }
+        fprintf("O nó %s saiu do anel.", node->self);
+        clean_node(node);
+        FD_ZERO(&rfds);
+        freeaddrinfo(res);
+        close(fd);
+        return;
       }
-      else if (strcmp(modo, "exit") == 0 || strcmp(modo, "x") == 0)
-      {
-        fprintf(stdout, "Entrei no exit\n");
-        if (node->self != node->pred)
+      else if (strcmp(node->succ, node->pred) == 0 && strcmp(node->self, node->pred) == 0)
+      { // leave:check if único node/////
+        if (strcmp(node->ring, "\0") != 0)
         {
-          if (node->ring_bool == 1)
-          {
-            leave(node);
-          }
-          clean_node(node);
-          FD_ZERO(&rfds);
-          freeaddrinfo(res);
-          close(node->pred_fd);
-          close(node->succ_fd);
-          if (node->chord_bool == 1)
-          {
-            close(node->chord_fd);
-          }
-          close(fd);
-          close(2);
-          close(1);
-          close(0);
-          free(node);
-          exit(0);
+          leave(node);
         }
-        else if ((node->succ == node->pred) && (node->self == node->pred))
-        { /////EXIT:check if único node/////
-          if (node->ring_bool == 1)
-          {
-            leave(node);
-          }
-          clean_node(node);
-          FD_ZERO(&rfds);
-          freeaddrinfo(res);
-          close(fd);
-          close(2);
-          close(1);
-          close(0);
-          free(node);
-          exit(0);
+        fprintf("O nó %s saiu do anel.", node->self);
+        clean_node(node);
+        FD_ZERO(&rfds);
+        freeaddrinfo(res);
+        close(fd);
+        return;
+      }
+    }
+    else if (strcmp(modo, "exit") == 0 || strcmp(modo, "x") == 0)
+    {
+      if (node->self != node->pred)
+      {
+        if (strcmp(node->ring, "\0") != 0)
+        {
+          leave(node);
         }
+        clean_node(node);
+        FD_ZERO(&rfds);
+        freeaddrinfo(res);
+        close(node->pred_fd);
+        close(node->succ_fd);
+        if (node->chord_bool == 1)
+        {
+          close(node->chord_fd);
+        }
+        close(fd);
+        close(2);
+        close(1);
+        close(0);
+        free(node);
+        fprintf(stdout, "Saída da aplicação com sucesso.");
+        exit(0);
+      }
+      else if ((node->succ == node->pred) && (node->self == node->pred))
+      { /////EXIT:check if único node/////
+        if (strcmp(node->ring, "\0") != 0)
+        {
+          leave(node);
+        }
+        clean_node(node);
+        FD_ZERO(&rfds);
+        freeaddrinfo(res);
+        close(fd);
+        close(2);
+        close(1);
+        close(0);
+        free(node);
+        fprintf(stdout, "Saída da aplicação com sucesso.");
+        exit(0);
+      }
+    }
+    else
+    {
+      choose_terminal_cmd(node, readInter);
+    };
+    Interface(node);
+  }
+  /**********************************************************************/
+
+  /* fd responsável pelo canal do sucessor ******************************/
+  if (FD_ISSET(node->succ_fd, &rfds))
+  {
+    memset(buffer, '\0', 500);
+    FD_CLR(node->succ_fd, &rfds);
+    while ((n = read(node->succ_fd, buffer, 500)) != 0)
+    {
+      if (n == -1)
+      {
+        printf("Erro no n");
+        exit(1);
       }
       else
       {
-        choose_terminal_cmd(node, readInter);
+        // identificar o protocolo recebido
+        choose_received_protocol(node, buffer, node->succ_fd);
+        break;
       }
-      // fprintf(stdout, "Chego aqui");
-      Interface(node);
     }
-    /**********************************************************************/
-
-    /* fd responsável pelo canal do sucessor ******************************/
-    if (FD_ISSET(node->succ_fd, &rfds))
+    if (n == 0)
     {
-      memset(buffer, '\0', 500);
-      FD_CLR(node->succ_fd, &rfds);
-      while ((n = read(node->succ_fd, buffer, 500)) != 0)
+      if (strcmp(node->self, node->succ_two) == 0)
       {
-        printf("Recebi uma mensagem do meu succ\n");
-        // fprintf(stdout, "n pred:%d\n", n);
+        // caso 2 nós, 1 vai sair e vai ficar só 1
+        strcpy(node_left, node->succ);
+        strcpy(node->succ, node->succ_two);
+        strcpy(node->succ_IP, node->succ_two_IP);
+        strcpy(node->succ_TCP, node->succ_two_TCP);
+        strcpy(node->pred, node->succ_two);
+        close(node->pred_fd);
+        close(node->succ_fd);
+        if (node->chord_bool == 1)
+        {
+          close(node->chord_fd);
+        }
+        node->pred_fd = -1;
+        node->succ_fd = -1;
+        node->chord_fd = -1;
+        // atualizar tabelas
+        update_neighbour(node, node_left, node->succ);
+        node_left[0] = '\0';
+      }
+      else if (strcmp(node->self, node->succ_two) != 0 && strcmp(node->pred, node->succ_two) == 0)
+      {
+        // passar de 3 para 2 nós
+        strcpy(node_left, node->succ);
+        strcpy(node->succ, node->succ_two);
+        strcpy(node->succ_IP, node->succ_two_IP);
+        strcpy(node->succ_TCP, node->succ_two_TCP);
+        // esta ordem é importante (SUCC primeiro e depois PRED) para este caso
+        close(node->succ_fd);
+        lixo = SUCC("0", "0", node, 1);
+        node->succ_fd = PRED(node->succ_IP, node->succ_TCP, node, 0);
+
+        // atualizar tabelas
+        update_neighbour(node, node_left, node->succ);
+        node_left[0] = '\0';
+        // enviar route
+        ROUTE(node, node->pred, node->pred_fd);
+        ROUTE(node, node->succ, node->succ_fd);
+      }
+      else
+      {
+        strcpy(node_left, node->succ);
+        strcpy(node->succ, node->succ_two);
+        strcpy(node->succ_IP, node->succ_two_IP);
+        strcpy(node->succ_TCP, node->succ_two_TCP);
+        close(node->succ_fd);
+        lixo = SUCC("0", "0", node, 1);
+        node->succ_fd = PRED(node->succ_IP, node->succ_TCP, node, 0);
+
+        // atualizar tabelas
+        update_neighbour(node, node_left, node->succ);
+        node_left[0] = '\0';
+        // enviar route
+        ROUTE(node, node->pred, node->pred_fd);
+        ROUTE(node, node->succ, node->succ_fd);
+        if (node->chord_bool == 1)
+        {
+          ROUTE(node, node->chord, node->chord_fd);
+        }
+        for (size_t j = 0; j < MAX_N_NODES; j++)
+        {
+          if (node->chord_rec[j] != -1)
+          {
+            search_fd(node, node->chord_rec[j], &fd_index);
+            ROUTE(node, node->table_indexes[fd_index], node->chord_rec[j]);
+          }
+        }
+      }
+    }
+  }
+
+  /**********************************************************************/
+
+  /* fd responsável pelo canal do predecessor ***************************/
+  if (FD_ISSET(node->pred_fd, &rfds))
+  {
+    FD_CLR(node->pred_fd, &rfds);
+    memset(buffer, '\0', 500);
+    while ((n = read(node->pred_fd, buffer, 500)) != 0)
+    {
+      if (n == -1)
+      {
+        printf("Erro no n");
+        exit(1);
+      }
+      else
+      {
+        // identificar o protocolo recebido
+        choose_received_protocol(node, buffer, node->pred_fd);
+        break;
+      }
+    }
+    if (n == 0)
+    {
+      if (strcmp(node->self, node->succ_two) == 0)
+      { // caso em que estão 2 nós e o outro sai
+        strcpy(node->node_left, node->pred);
+        node->pred_left_bool = 1;
+        close(node->pred_fd);
+        node->pred_fd = -1;
+      }
+      else
+      {
+        strcpy(node->node_left, node->pred);
+        node->pred_left_bool = 1;
+        close(node->pred_fd);
+        node->pred_fd = -1;
+      }
+    }
+  }
+  /**********************************************************************/
+
+  /* fd responsável pelas cordas que se ligaram a mim *********************************/
+  for (i = 0; i < MAX_N_NODES; i++)
+  {
+    if (FD_ISSET(node->chord_rec[i], &rfds))
+    {
+      FD_CLR(node->chord_rec[i], &rfds);
+      memset(buffer, '\0', 500);
+      while ((n = read(node->chord_rec[i], buffer, 500)) != 0)
+      {
         if (n == -1)
         {
           printf("Erro no n");
@@ -227,182 +334,29 @@ void impl_select(node *node)
         }
         else
         {
-          // identificar o protocolo recebido
-          choose_received_protocol(node, buffer, node->succ_fd);
-          // fprintf(stdout, "Cheguei aqui");
-          break; // necessário para parar o while se não eles mesmo depois de tudo continua aqui e não recebe mais coisas
+          choose_received_protocol(node, buffer, node->chord_fd);
         }
+        break;
       }
       if (n == 0)
       {
-        if (strcmp(node->self, node->succ_two) == 0)
+        node->chord_rec[i] = -1;
+        // atualizar tabelas
+        search_fd(node, node->chord_rec[i], &fd_index);
+        update_neighbour(node, node->table_indexes[fd_index], NULL);
+        // enviar route
+        ROUTE(node, node->pred, node->pred_fd);
+        ROUTE(node, node->succ, node->succ_fd);
+        if (node->chord_bool == 1)
         {
-          // caso 2 nós, 1 vai sair e vai ficar só 1
-          strcpy(node_left, node->succ);
-          strcpy(node->succ, node->succ_two);
-          strcpy(node->succ_IP, node->succ_two_IP);
-          strcpy(node->succ_TCP, node->succ_two_TCP);
-          strcpy(node->pred, node->succ_two);
-          close(node->pred_fd);
-          close(node->succ_fd);
-          if (node->chord_bool == 1)
-          {
-            close(node->chord_fd);
-          }
-          node->pred_fd = -1;
-          node->succ_fd = -1;
-          node->chord_fd = -1;
-          // atualizar tabelas
-          update_neighbour(node, node_left, node->succ);
-          node_left[0] = '\0';
+          ROUTE(node, node->chord, node->chord_fd);
         }
-        else if (strcmp(node->self, node->succ_two) != 0 && strcmp(node->pred, node->succ_two) == 0)
+        for (size_t j = 0; j < MAX_N_NODES; j++)
         {
-          // passar de 3 para 2 nós
-          strcpy(node_left, node->succ);
-          strcpy(node->succ, node->succ_two);
-          strcpy(node->succ_IP, node->succ_two_IP);
-          strcpy(node->succ_TCP, node->succ_two_TCP);
-          // esta ordem é importante (SUCC primeiro e depois PRED) para este caso
-          close(node->succ_fd);
-          lixo = SUCC("0", "0", node, 1);
-          node->succ_fd = PRED(node->succ_IP, node->succ_TCP, node, 0);
-
-          // atualizar tabelas
-          update_neighbour(node, node_left, node->succ);
-          node_left[0] = '\0';
-          // enviar route
-          ROUTE(node, node->pred, node->pred_fd);
-          ROUTE(node, node->succ, node->succ_fd);
-        }
-        else
-        {
-          strcpy(node_left, node->succ);
-          fprintf(stdout, "O meu succ deu leave");
-          strcpy(node->succ, node->succ_two);
-          strcpy(node->succ_IP, node->succ_two_IP);
-          strcpy(node->succ_TCP, node->succ_two_TCP);
-          close(node->succ_fd);
-          lixo = SUCC("0", "0", node, 1);
-          node->succ_fd = PRED(node->succ_IP, node->succ_TCP, node, 0);
-
-          // atualizar tabelas
-          update_neighbour(node, node_left, node->succ);
-          node_left[0] = '\0';
-          // enviar route
-          ROUTE(node, node->pred, node->pred_fd);
-          ROUTE(node, node->succ, node->succ_fd);
-          if (node->chord_bool == 1)
+          if (node->chord_rec[j] != -1)
           {
-            ROUTE(node, node->chord, node->chord_fd);
-          }
-          for (size_t j = 0; j < MAX_N_NODES; j++)
-          {
-            if (node->chord_rec[j] != -1)
-            {
-              search_fd(node, node->chord_rec[j], &fd_index);
-              ROUTE(node, node->table_indexes[fd_index], node->chord_rec[j]);
-            }
-          }
-        }
-      }
-    }
-
-    /**********************************************************************/
-
-    /* fd responsável pelo canal do predecessor ***************************/
-    if (FD_ISSET(node->pred_fd, &rfds))
-    {
-      FD_CLR(node->pred_fd, &rfds);
-      memset(buffer, '\0', 500);
-      // printf("Recebi uma mensagem do meu pred");
-      // fprintf(stdout, "A fd é: %d \n", node->pred_fd);
-      while ((n = read(node->pred_fd, buffer, 500)) != 0)
-      {
-        printf("Recebi uma mensagem do meu pred");
-        // fprintf(stdout, "n pred:%d\n", n);
-        if (n == -1)
-        {
-          printf("Erro no n");
-          exit(1);
-        }
-        else
-        {
-          // identificar o protocolo recebido
-          choose_received_protocol(node, buffer, node->pred_fd);
-          /*token = strtok(buffer,"\n");
-          while (token != NULL)
-          {
-            choose_received_protocol(node, token, node->pred_fd);
-            fprintf(stdout, "Voltei do choose protocol\n");
-            strcpy(token, strtok(NULL,"\n"));
-          }*/
-          break; // necessário para parar o while se não eles mesmo depois de tudo continua aqui e não recebe mais coisas
-        }
-      }
-      if (n == 0)
-      {
-        if (strcmp(node->self, node->succ_two) == 0)
-        { // caso em que estão 2 nós e o outro sai
-          strcpy(node->node_left, node->pred);
-          node->pred_left_bool = 1;
-          close(node->pred_fd);
-          node->pred_fd = -1;
-          fprintf(stdout, "O meu pred deu leave");
-        }
-        else
-        {
-          strcpy(node->node_left, node->pred);
-          node->pred_left_bool = 1;
-          close(node->pred_fd);
-          node->pred_fd = -1;
-          fprintf(stdout, "O meu pred deu leave");
-        }
-      }
-    }
-    /**********************************************************************/
-
-    /* fd responsável pelas cordas que se ligaram a mim *********************************/
-    for (i = 0; i < MAX_N_NODES; i++)
-    {
-      if (FD_ISSET(node->chord_rec[i], &rfds))
-      {
-        FD_CLR(node->chord_rec[i], &rfds);
-        memset(buffer, '\0', 500);
-        while ((n = read(node->chord_rec[i], buffer, 500)) != 0)
-        {
-          if (n == -1)
-          {
-            printf("Erro no n");
-            exit(1);
-          }
-          else
-          {
-            choose_received_protocol(node, buffer, node->chord_fd);
-          }
-          // identificar o protocolo recebido
-          break; // necessário para parar o while se não eles mesmo depois de tudo continua aqui e não recebe mais coisas
-        }
-        if (n == 0)
-        {
-          node->chord_rec[i] = -1;
-          // atualizar tabelas
-          search_fd(node, node->chord_rec[i], &fd_index);
-          update_neighbour(node, node->table_indexes[fd_index], NULL);
-          // enviar route
-          ROUTE(node, node->pred, node->pred_fd);
-          ROUTE(node, node->succ, node->succ_fd);
-          if (node->chord_bool == 1)
-          {
-            ROUTE(node, node->chord, node->chord_fd);
-          }
-          for (size_t j = 0; j < MAX_N_NODES; j++)
-          {
-            if (node->chord_rec[j] != -1)
-            {
-              search_fd(node, node->chord_rec[j], &fd_index);
-              ROUTE(node, node->table_indexes[fd_index], node->chord_rec[j]);
-            }
+            search_fd(node, node->chord_rec[j], &fd_index);
+            ROUTE(node, node->table_indexes[fd_index], node->chord_rec[j]);
           }
         }
       }
@@ -423,7 +377,7 @@ void impl_select(node *node)
         }
         // identificar o protocolo recebido
         choose_received_protocol(node, buffer, node->chord_fd);
-        break; // necessário para parar o while se não eles mesmo depois de tudo continua aqui e não recebe mais coisas
+        break;
       }
       if (n == 0)
       {
@@ -442,7 +396,6 @@ void impl_select(node *node)
           }
         }
       }
-      // close(newfd); // não pdoemos dar close, só no leave
       // break;
     }
     /**********************************************************************/
@@ -451,8 +404,6 @@ void impl_select(node *node)
     if (FD_ISSET(fd, &rfds))
     {
       memset(buffer, '\0', 500);
-      fprintf(stdout, "Recebi uma mensagem de alguém\n");
-      // fprintf(stdout,"foi de: %d\n", fd); //socket de escuta
       FD_CLR(fd, &rfds);
       addrlen = sizeof(addr);
       if ((newfd = accept(fd, &addr, &addrlen)) == -1)
@@ -468,13 +419,11 @@ void impl_select(node *node)
           exit(1);
         }
         // identificar o protocolo recebido
-        fprintf(stdout, "estou a receber no buffer: %s\n", buffer);
         choose_received_protocol(node, buffer, newfd);
-        break; // necessário para parar o while se não eles mesmo depois de tudo continua aqui e não deixa ler mais coisas do terminal
+        break; 
       }
     }
     /**********************************************************************/
-    //}
   }
 }
 
@@ -494,7 +443,7 @@ void choose_terminal_cmd(node *node, char readInter[])
   {
     if (node->ring_bool == 1)
     {
-      printf("\n=== Nó já pertence a um anel! ===\n"); // Not sure se é suposto fazer isto
+      printf("\n=== Nó já pertence a um anel! ===\n"); 
       return;
     }
     sscanf(readInter, "%s %s %s", modo, ring, id);
@@ -520,18 +469,15 @@ void choose_terminal_cmd(node *node, char readInter[])
       {
         sscanf(readInter, "%s %s %s %s %s", modo, id, succid, succIP, succTCP);
         sprintf(buffer, "%s %s %s %s", id, succid, succIP, succTCP);
-        // fprintf(stdout, "Buffer: %s\n", buffer);
       }
       if (strcmp(modo2, "join") == 0)
       {
         sscanf(readInter, "%s %s %s %s %s %s", modo, modo2, id, succid, succIP, succTCP);
         sprintf(buffer, "%s %s %s %s", id, succid, succIP, succTCP);
-        // printf("Buffer: %s", buffer);
       }
       strcpy(node->self, id);
       strcpy(node->self_IP, IP_global);
       strcpy(node->self_TCP, TCP_global);
-      // printf("minhas informações %s %s %s:\n", node->self,node->self_IP, node->self_TCP);
       direct_join(ring, node, buffer);
     }
     else
@@ -549,9 +495,13 @@ void choose_terminal_cmd(node *node, char readInter[])
       printf("\n=== Nó já tem uma corda! ===\n");
       return;
     }
+    else if (strcmp(node->ring, "\0") == 0)
+    {
+      fprintf(stdout, "O nó não tem conhecimento do anel a qual faz parte. Não poderá criar cordas");
+    }
     else
     {
-      chord(node, readInter);
+      chord(node);
     }
   }
 
@@ -674,46 +624,9 @@ void choose_received_protocol(node *node, char buffer[], int fd)
   char lixo[30];
   char origin_id[3], dest_id[3], path[50];
   char i[3], n[3], message[128];
-
-  fprintf(stdout, "Recebi algo: %s\n", buffer);
-  // fprintf(stdout,"tamanho %zu\n", strlen("\n"));
-  /* sscanf(buffer, "%s", protocol);
-   printf("\n\n»»»»»»»»»\nprotocol: %s\n««««««««««««\n\n", protocol);
-   if (strcmp(protocol, "ENTRY") == 0)
-   {
-     sscanf(buffer, "%s %s %s %s", protocol, aux_id, aux_IP, aux_TCP);
-     ENTRY_Received(aux_id, aux_IP, aux_TCP, node, fd);
-   }
-   else if (strcmp(protocol, "SUCC") == 0)
-   {
-     sscanf(buffer, "%s %s %s %s", protocol, aux_id, aux_IP, aux_TCP);
-     SUCC_Received(aux_id, aux_IP, aux_TCP, node, fd);
-     fprintf(stdout, "Sai do SUCC Received\n");
-   }
-   else if (strcmp(protocol, "PRED") == 0)
-   {
-     sscanf(buffer, "%s %s", protocol, aux_id);
-     PRED_Received(aux_id, node, fd);
-   }
-   else if (strcmp(protocol, "CHORD") == 0)
-   {
-     sscanf(buffer, "%s %s", protocol, aux_id);
-     CHORD_Received(aux_id, node, fd);
-   }
-   else if (strcmp(protocol, "ROUTE") == 0)
-   {
-     sscanf(buffer, "%s %s %s %s", protocol, origin_id, dest_id, path);
-     ROUTE_Received(node, origin_id, dest_id, path);
-   }
-   else if (strcmp(protocol, "CHAT") == 0)
-   {
-     sscanf(buffer, "%s %s %s %s", protocol, i, n, message);
-     CHAT_Received(node, i, n, message);
-   }*/
-
   char *after = buffer;
-  // fprintf(stdout, "After: %s", after);
   char *aux_after = buffer;
+
   while ((aux_after = find_next_protocol(after)) != NULL) // guardar mensagens a serem recebidas
   {
     sscanf(after, "%s", protocol);
@@ -741,19 +654,14 @@ void choose_received_protocol(node *node, char buffer[], int fd)
     {
       sscanf(after, "%s %s %s %s", protocol, origin_id, dest_id, path);
       ROUTE_Received(node, origin_id, dest_id, path);
-      // exit(1);
     }
     else if (strcmp(protocol, "CHAT") == 0)
     {
       sscanf(buffer, "%s %s %s %s", protocol, i, n, message);
       CHAT_Received(node, i, n, message);
     }
-    // after = find_next_protocol(after);
-    // fprintf(stdout,"After no final de uma ronda: %s\n", after);
-    // fprintf(stdout,"Aux no final de uma ronda: %s\n", aux_after);
     after = aux_after;
   }
-  // fprintf(stdout,"After assim que saio do while: %s\n", after);
 }
 
 void PRED_Received(char aux_id[], node *node, int fd)
@@ -762,16 +670,13 @@ void PRED_Received(char aux_id[], node *node, int fd)
   int fd_index = 0;
   if (node->pred_left_bool == 1)
   {
-    fprintf(stdout, "Recebi o PRED left pred\n");
     strcpy(node->pred, aux_id);
     node->pred_fd = fd;
     lixo = SUCC("0", "0", node, 1);
-    // codigo
     node->pred_left_bool = 0;
   }
   else
   {
-    fprintf(stdout, "Recebi o PRED\n");
     strcpy(node->pred, aux_id);
     node->pred_fd = fd;
   }
@@ -796,7 +701,6 @@ void PRED_Received(char aux_id[], node *node, int fd)
   }
   ROUTE(node, node->pred, node->pred_fd);
   ROUTE(node, node->succ, node->succ_fd);
-  fprintf(stdout, "Terminei de enviar mensagens de ROUTE\n");
 }
 
 void ENTRY_Received(char aux_id[], char aux_IP[], char aux_TCP[], node *node, int fd)
@@ -805,9 +709,6 @@ void ENTRY_Received(char aux_id[], char aux_IP[], char aux_TCP[], node *node, in
 
   if (fd == node->succ_fd)
   {
-    fprintf(stdout, "Recebi um entry not me\n");
-    // sscanf(buffer, "%s %s %s %s", protocol, aux_id, aux_IP, aux_TCP);
-    // fprintf(stdout, "meu pred fd:%d\n", node->pred_fd);
     close(node->succ_fd);
     node->succ_fd = PRED(aux_IP, aux_TCP, node, 0);
     strcpy(node->succ_two, node->succ);
@@ -821,13 +722,10 @@ void ENTRY_Received(char aux_id[], char aux_IP[], char aux_TCP[], node *node, in
   }
   else
   { // caso de novo nó
-    fprintf(stdout, "Recebi um entry\n");
-    // fprintf(stdout, "Veio do fd: %i\n", fd);
     if (strcmp(node->pred, node->self) == 0)
     { // caso em que ainda só são 2 nós na rede
       strcpy(node->pred, aux_id);
       node->pred_fd = fd;
-      // fprintf(stdout, "pred_fd quando recebo entry1: %d\n", node->pred_fd);
       strcpy(node->succ, aux_id);
       strcpy(node->succ_IP, aux_IP);
       strcpy(node->succ_TCP, aux_TCP);
@@ -836,26 +734,19 @@ void ENTRY_Received(char aux_id[], char aux_IP[], char aux_TCP[], node *node, in
     }
     else
     { //+2 nós
-      // fprintf(stdout, "Entrei no +2 nós");
       ENTRY_not_me("0", "0", node, aux_id, aux_IP, aux_TCP);
       node->pred_fd = fd;
-      // fprintf(stdout, "pred fd:%d\n", node->pred_fd);
       strcpy(node->pred, aux_id);
       lixo = SUCC(aux_IP, aux_TCP, node, 1);
-      // fprintf(stdout, "meu pred:%s", node->pred);
     }
   }
 }
 
 void SUCC_Received(char aux_id[], char aux_IP[], char aux_TCP[], node *node, int fd)
 {
-  fprintf(stdout, "Recebi o SUCC\n");
-  // fprintf(stdout, "Veio do fd: %i\n", fd);
   strcpy(node->succ_two, aux_id);
   strcpy(node->succ_two_IP, aux_IP);
   strcpy(node->succ_two_TCP, aux_TCP);
-  // fprintf(stdout,"2º sucessor: %s %s %s", node->succ_two, node->succ_two_IP, node->succ_two_TCP);
-  // fprintf(stdout, "fd que guardo pos SUCC: %d\n", node->succ_fd);
 }
 
 void CHORD_Received(char aux_id[], node *node, int fd)
@@ -883,7 +774,7 @@ void CHAT_Received(node *node, char i[], char n[], char message[])
 {
   if (strcmp(node->self, n) == 0)
   {
-    fprintf(stdout,"\nRecebi uma mensagem:\n %s\n", message);
+    fprintf(stdout, "\nRecebi uma mensagem:\n %s\n", message);
   }
   else
   {

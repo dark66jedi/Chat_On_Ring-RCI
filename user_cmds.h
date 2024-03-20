@@ -14,7 +14,7 @@ void leave(node* n);
 void show_routing(node *node, char dest[]);
 void show_path(node *node, char dest[]);
 void show_forwarding(node *node);
-void chord(node *n, char buffer[]);
+void chord(node *n);
 void remove_chord(node *n);
 void message(node *n, char dest[], char message[]);
 

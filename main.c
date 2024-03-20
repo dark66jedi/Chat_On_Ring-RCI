@@ -46,7 +46,6 @@ int main(int argc, char *argv[])
     n->chord_bool = 0;
     n->ring_bool = 0;
 
-    //ESCLARECER: Dar "leave" é basicamente como se voltássemos ao inicio da aplicação e tivéssemos de dar join/djoin de novo? Ou o nó mantém o seu id?
     while(1){
       Interface(n);
       impl_select(n);
@@ -61,5 +60,5 @@ int main(int argc, char *argv[])
     printf("regIP é o endereço do servidor de nós\n");
     printf("regTCP é o porto TCP do servidor de nós\n");
   }
-  return 0;
+  return 0; //FAZER QUESTÃO DE SE ESCREVEREM MAL, VOLTAR
 }
