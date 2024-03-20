@@ -43,6 +43,7 @@ typedef struct node
   char chord_IP[50];
   char chord_TCP[10];
   int pred_left_bool; //fica 1 quando o seu pred deu leave
+  char node_left[3];
   int ring_bool;
   int chord_bool;                   // boleano, se ainda não foi criada uma corda está a 0 senão está a 1
   
