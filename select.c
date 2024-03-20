@@ -859,6 +859,7 @@ void CHORD_Received(char aux_id[], node *node, int fd)
 
   search_index(node, aux_id, &int_id);
   node->chord_rec[int_id] = fd;
+  update_neighbour(node, NULL, aux_id);
   ROUTE(node, node->pred, node->pred_fd);
   ROUTE(node, node->succ, node->succ_fd);
 
@@ -876,7 +877,7 @@ void CHAT_Received(node *node, char i[], char n[], char message[])
 {
   if (strcmp(node->self, n) == 0)
   {
-    // Mensagem chegou ao destino
+    fprintf(stdout,"\nRecebi uma mensagem:\n %s\n", message);
   }
   else
   {
