@@ -7,7 +7,7 @@ void Interface(node *node);
 char *DeleteMethod(char *string);
 char *DeleteMethod_space(char *string);
 char *find_next_protocol(char *buffer);
-int max(int x, int y, int z, int j);
+int max(int x, int y, int z, int j, int lista[]);
 void search_index(node *node, char node_id[], int *index);
 void search_fd(node *node, int fd, int *index);
 void check_for_new_node(node *node, char path[]);

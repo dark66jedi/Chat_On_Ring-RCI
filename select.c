@@ -51,7 +51,7 @@ void impl_select(node *node)
     FD_ZERO(&rfds);
     FD_SET(0, &rfds);
     FD_SET(fd, &rfds);
-    maxfd = max(fd, node->pred_fd, node->succ_fd, node->chord_fd);
+    maxfd = max(fd, node->pred_fd, node->succ_fd, node->chord_fd, node->chord_rec);
     if (node->pred_fd > 0)
     {
       FD_SET(node->pred_fd, &rfds); // só se pode dar set se existir
@@ -715,6 +715,7 @@ void impl_select(node *node)
     {
       close(node->succ_fd);
       node->succ_fd = PRED(aux_IP, aux_TCP, node, 0);
+      update_neighbour(node, node->succ, aux_id);     // essencialmente não está a estragar nada porque só apaga as entradas nas tabelas
       strcpy(node->succ_two, node->succ);
       strcpy(node->succ_two_IP, node->succ_IP);
       strcpy(node->succ_two_TCP, node->succ_TCP);
@@ -728,6 +729,7 @@ void impl_select(node *node)
     { // caso de novo nó
       if (strcmp(node->pred, node->self) == 0)
       { // caso em que ainda só são 2 nós na rede
+        update_neighbour(node, node->pred, aux_id);     // essencialmente não está a estragar nada porque só apaga as entradas nas tabelas
         strcpy(node->pred, aux_id);
         node->pred_fd = fd;
         strcpy(node->succ, aux_id);

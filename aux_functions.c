@@ -83,7 +83,7 @@ void clean_node(node *node){
 }
 
 
-int max(int x, int y, int z, int j)
+int max(int x, int y, int z, int j, int lista[])
 {
     int highest = x;
 
@@ -96,6 +96,15 @@ int max(int x, int y, int z, int j)
     if (j > highest) {
         highest = j;
     }
+    for (size_t i = 0; i < MAX_N_NODES; i++)
+    {
+      if (lista[i] > highest)
+      {
+        highest = lista[i];
+      }
+      
+    }
+    
     return highest;
 }
 
@@ -241,8 +250,12 @@ void update_neighbour(node *node, char old_neighbour[], char new_neighbour[])
   }
   if(new_neighbour != NULL)
   {
-    strcpy(node->table_indexes[node->filling_table_index], new_neighbour);
-    node->filling_table_index = node->filling_table_index + 1;
+    search_index(node, new_neighbour, &new_neighbour_index);
+    if (new_neighbour_index == -1)
+    {
+      strcpy(node->table_indexes[node->filling_table_index], new_neighbour);
+      node->filling_table_index = node->filling_table_index + 1;
+    }
   }
   update_tables(node);
 }
