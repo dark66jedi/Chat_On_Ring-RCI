@@ -1,6 +1,7 @@
 #include "select.h"
 #include "user_cmds.h"
 #include <errno.h>
+#include <sys/time.h>
 
 void impl_select(node *node)
 {
@@ -10,6 +11,7 @@ void impl_select(node *node)
   int errcode_listen_tcp, errcode_pred_tcp, errcode_succ_tcp, errcode_chord_tcp;
   struct sockaddr addr;
   socklen_t addrlen;
+  struct timeval timeout;
   int counter = 0, nread = 0, n = 0;
   int lixo = 0;
   char buffer[500];
@@ -71,10 +73,19 @@ void impl_select(node *node)
       }
     }
 
-    counter = select(maxfd + 1, &rfds, (fd_set *)NULL, (fd_set *)NULL, (struct timeval *)NULL);
+    timeout.tv_sec = 2;
+    timeout.tv_usec = 0;
+
+    counter = select(maxfd + 1, &rfds, (fd_set *)NULL, (fd_set *)NULL, &timeout);
     if (counter == -1)
     {
       perror("Erro ao abrir o arquivo");
+    }
+
+    // o que acontece com há timeout
+    if (counter == 0)
+    {
+      /* code */
     }
 
     /* fd responsável pelo terminal****************************************/
@@ -611,6 +622,7 @@ void choose_terminal_cmd(node *node, char readInter[])
     after = DeleteMethod_space(after);
     strcpy(mensagem, after);
     printf("mensagem:%s\n", mensagem);
+    message(node, dest, mensagem);
   }
   else
   {
@@ -661,139 +673,13 @@ void choose_received_protocol(node *node, char buffer[], int fd)
     }
     else if (strcmp(protocol, "CHAT") == 0)
     {
-      sscanf(buffer, "%s %s %s %s", protocol, i, n, message);
+      sscanf(buffer, "%s %s %s", protocol, i, n);
+      char *after = DeleteMethod_space(buffer);
+      after = DeleteMethod_space(after);
+      after = DeleteMethod_space(after);
+      strcpy(message, after);
       CHAT_Received(node, i, n, message);
     }
     after = aux_after;
-  }
-}
-
-void PRED_Received(char aux_id[], node *node, int fd)
-{
-  int lixo = 0;
-  int fd_index = 0;
-  char answer[100];
-
-  if (node->pred_left_bool == 1)
-  {
-    strcpy(node->pred, aux_id);
-    node->pred_fd = fd;
-    lixo = SUCC("0", "0", node, 1);
-    node->pred_left_bool = 0;
-  }
-  else
-  {
-    strcpy(node->pred, aux_id);
-    node->pred_fd = fd;
-    REG(node->ring, answer, node);
-    if (strcmp(answer, "OKREG") != 0)
-    {
-      printf("Erro no registo do nó no anel");
-      exit(1);
-    }
-    node->ring_bool = 1;
-  }
-
-  // atualizar tabelas
-  update_neighbour(node, node->node_left, node->succ);
-  // enviar route
-  ROUTE(node, node->pred, node->pred_fd);
-  ROUTE(node, node->succ, node->succ_fd);
-  if (node->chord_bool == 1)
-  {
-    ROUTE(node, node->chord, node->chord_fd);
-  }
-  for (size_t j = 0; j < MAX_N_NODES; j++)
-  {
-    if (node->chord_rec[j] != -1)
-    {
-      search_fd(node, node->chord_rec[j], &fd_index);
-      ROUTE(node, node->table_indexes[fd_index], node->chord_rec[j]);
-    }
-  }
-  ROUTE(node, node->pred, node->pred_fd);
-  ROUTE(node, node->succ, node->succ_fd);
-}
-
-void ENTRY_Received(char aux_id[], char aux_IP[], char aux_TCP[], node *node, int fd)
-{
-  int lixo = 0;
-
-  if (fd == node->succ_fd)
-  { // recebi um ENTRY NOT ME
-    close(node->succ_fd);
-    node->succ_fd = PRED(aux_IP, aux_TCP, node, 0);
-    strcpy(node->node_left, node->succ);
-    strcpy(node->succ_two, node->succ);
-    strcpy(node->succ_two_IP, node->succ_IP);
-    strcpy(node->succ_two_TCP, node->succ_TCP);
-    strcpy(node->succ, aux_id);
-    strcpy(node->succ_IP, aux_IP);
-    strcpy(node->succ_TCP, aux_TCP);
-    show_topology(node);
-    lixo = SUCC("0", "0", node, 1);
-    update_neighbour(node, node->node_left, node->succ); // essencialmente não está a estragar nada porque só apaga as entradas nas tabelas
-  }
-  else
-  { // caso de novo nó
-    if (strcmp(node->pred, node->self) == 0)
-    { // caso em que ainda só são 2 nós na rede
-      strcpy(node->pred, aux_id);
-      node->pred_fd = fd;
-      strcpy(node->succ, aux_id);
-      strcpy(node->succ_IP, aux_IP);
-      strcpy(node->succ_TCP, aux_TCP);
-      lixo = SUCC(aux_IP, aux_TCP, node, 1);
-      node->succ_fd = PRED(aux_IP, aux_TCP, node, 0);
-    }
-    else
-    { //+2 nós
-      ENTRY_not_me("0", "0", node, aux_id, aux_IP, aux_TCP);
-      node->pred_fd = fd;
-      strcpy(node->node_left, node->pred);
-      strcpy(node->pred, aux_id);
-      lixo = SUCC(aux_IP, aux_TCP, node, 1);
-      update_neighbour(node, node->node_left, node->pred);
-    }
-  }
-}
-
-void SUCC_Received(char aux_id[], char aux_IP[], char aux_TCP[], node *node, int fd)
-{
-  strcpy(node->succ_two, aux_id);
-  strcpy(node->succ_two_IP, aux_IP);
-  strcpy(node->succ_two_TCP, aux_TCP);
-}
-
-void CHORD_Received(char aux_id[], node *node, int fd)
-{
-  int int_id = 0;
-  int i = 0;
-
-  search_index(node, aux_id, &int_id);
-  node->chord_rec[int_id] = fd;
-  update_neighbour(node, NULL, aux_id);
-  ROUTE(node, node->pred, node->pred_fd);
-  ROUTE(node, node->succ, node->succ_fd);
-
-  for (i = 0; i < MAX_N_NODES; i++)
-  {
-    if (node->chord_rec[i] != -1)
-    {
-      ROUTE(node, aux_id, node->chord_rec[i]);
-    }
-  }
-  return;
-}
-
-void CHAT_Received(node *node, char origin[], char dest[], char message[])
-{
-  if (strcmp(node->self, dest) == 0)
-  {
-    fprintf(stdout, "\nRecebi uma mensagem:\n %s\n", message);
-  }
-  else
-  {
-    CHAT(node, origin, dest, message);
   }
 }
