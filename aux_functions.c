@@ -14,7 +14,7 @@ void Interface(node *node)
     fprintf(stdout, "\n \u2022 2ª interface");
     if (node->chord_bool == 0)
     {
-      fprintf(stdout, "\n \u2022 chord (c) - Estabelicimento de uma corda com outro nó");
+      fprintf(stdout, "\n \u2022 chord (c) - Estabelecimento de uma corda com outro nó");
     }
     else if (node->chord_bool == 1)
     {

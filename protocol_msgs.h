@@ -11,7 +11,7 @@ void ENTRY_not_me(char connectIP[], char connectTCP[], node *node, char aux_id[]
 int PRED(char connectIP[], char connectTCP[], node *node, int sock_created);
 int SUCC(char connectIP[], char connectTCP[], node *node, int sock_created);
 int CHORD(char connectIP[], char connectTCP[], node *node);
-void CHAT(node *node, char i[], char n[], char message[]);
+void CHAT(node *node, char origin[], char dest[], char message[]);
 void ROUTE(node *node, char target_node[], int fd);
 void receive_ENTRY();
 void ROUTE_Received(node *node, char origin_id[], char dest_id[], char path[]);

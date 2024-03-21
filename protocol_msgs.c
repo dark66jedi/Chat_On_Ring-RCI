@@ -165,11 +165,31 @@ void ROUTE_Received(node *node, char origin_id[], char dest_id[], char path[])
     update_tables(node);
 }
 
-void CHAT(node *node, char i[], char n[], char message[]){
+void CHAT(node *node, char origin[], char dest[], char message[]){
     //Está feita para o caso de enviar sempre para o succ, depois é preciso alterar
-    char msg_to_send[100];
+    char msg_to_send[128];
     int fd = 0;
-    sprintf(msg_to_send,"CHAT %s %s %s\n",i, n, message);
+    int dest_idx, next_node_idx;
+    sprintf(msg_to_send,"CHAT %s %s %s\n", origin, dest, message);
 
-    fd = TCP_Client("0", "0", msg_to_send, 1, node->succ_fd); 
+    search_index(node, dest, &dest_idx);
+    
+    // QUERO CONFIRMAR ISTO AMANHÃ CONTIGO MARTA!!!
+    if (strcmp(node->expedition_table[dest_idx], node->pred) == 0)
+    {
+        fd = TCP_Client("0", "0", msg_to_send, 1, node->pred_fd);
+    }
+    else if (strcmp(node->expedition_table[dest_idx], node->succ) == 0)
+    {
+        fd = TCP_Client("0", "0", msg_to_send, 1, node->succ_fd);
+    }
+    else if (strcmp(node->expedition_table[dest_idx], node->chord) == 0)
+    {
+        fd = TCP_Client("0", "0", msg_to_send, 1, node->chord_fd);
+    }
+    else
+    {
+        search_index(node, node->expedition_table[dest_idx], &next_node_idx);
+        fd = TCP_Client("0", "0", msg_to_send, 1, node->chord_rec[next_node_idx]);
+    }
 }

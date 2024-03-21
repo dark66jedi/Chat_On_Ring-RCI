@@ -775,15 +775,15 @@ void impl_select(node *node)
     return;
   }
 
-  void CHAT_Received(node * node, char i[], char n[], char message[])
+  void CHAT_Received(node * node, char origin[], char dest[], char message[])
   {
-    if (strcmp(node->self, n) == 0)
+    if (strcmp(node->self, dest) == 0)
     {
       fprintf(stdout, "\nRecebi uma mensagem:\n %s\n", message);
     }
     else
     {
-      CHAT(node, i, n, message);
+      CHAT(node, origin, dest, message);
     }
   }
   
