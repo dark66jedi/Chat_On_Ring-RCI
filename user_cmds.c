@@ -100,9 +100,10 @@ void join(char ring[], node *n)
         }
 
         // ENTRY para o sucessor
-        i = 1; //para o caso de o 1º nó ter saído abruptamente;
+        i = 1; // para o caso de o 1º nó ter saído abruptamente;
         fd = ENTRY(connectIP, connectTCP, n);
-        while(fd == -1){
+        while (fd == -1)
+        {
             strcpy(connectid, list[i].id);
             strcpy(connectIP, list[i].IP);
             strcpy(connectTCP, list[i].TCP);
@@ -162,6 +163,7 @@ void chord(node *n)
     char answer[500];
     char aux_id[3], aux_IP[50], aux_TCP[30];
     int i = 0;
+    int fd_index = 0;
 
     if (strcmp(n->succ_two, n->self) == 0 || strcmp(n->succ_two, n->pred) == 0)
     { // caso de só existir 1, 2 ou 3 aneis no anel
@@ -194,6 +196,24 @@ void chord(node *n)
         strcpy(n->chord_TCP, list[i].TCP);
         n->chord_fd = CHORD(n->chord_IP, n->chord_TCP, n);
         n->chord_bool = 1;
+
+        // atualizar tabelas
+        update_neighbour(n, NULL, n->chord);
+        // enviar route
+        ROUTE(n, n->pred, n->pred_fd);
+        ROUTE(n, n->succ, n->succ_fd);
+        if (n->chord_bool == 1)
+        {
+            ROUTE(n, n->chord, n->chord_fd);
+        }
+        for (size_t j = 0; j < MAX_N_NODES; j++)
+        {
+            if (n->chord_rec[j] != -1)
+            {
+                search_fd(n, n->chord_rec[j], &fd_index);
+                ROUTE(n, n->table_indexes[fd_index], n->chord_rec[j]);
+            }
+        }
     }
 }
 
