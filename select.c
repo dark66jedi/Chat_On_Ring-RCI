@@ -84,7 +84,6 @@ void impl_select(node *node)
       if (fgets(readInter, sizeof(readInter), stdin) != NULL)
       {
         sscanf(readInter, "%s", modo);
-        fprintf(stdout, "ring bool: %d", node->ring_bool);
         while (node->ring_bool == 0)
         {
           if ((strcmp(modo, "direct") == 0) || (strcmp(modo, "dj") == 0) || (strcmp(modo, "join") == 0) || (strcmp(modo, "j") == 0) || (strcmp(modo, "exit") == 0) || (strcmp(modo, "x") == 0))
@@ -114,7 +113,7 @@ void impl_select(node *node)
           {
             close(node->chord_fd);
           }
-          fprintf(stdout, "O nó %s saiu do anel.\n", node->self);
+          fprintf(stdout, "\nO nó %s saiu do anel.\n", node->self);
           clean_node(node);
           FD_ZERO(&rfds);
           freeaddrinfo(res);
@@ -670,6 +669,8 @@ void impl_select(node *node)
   {
     int lixo = 0;
     int fd_index = 0;
+    char answer[100];
+
     if (node->pred_left_bool == 1)
     {
       strcpy(node->pred, aux_id);
@@ -681,6 +682,13 @@ void impl_select(node *node)
     {
       strcpy(node->pred, aux_id);
       node->pred_fd = fd;
+      REG(node->ring, answer, node);
+      if (strcmp(answer, "OKREG") != 0)
+      {
+          printf("Erro no registo do nó no anel");
+          exit(1);
+      }
+      node->ring_bool = 1;
     }
 
     // atualizar tabelas

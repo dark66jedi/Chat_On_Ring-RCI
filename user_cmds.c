@@ -37,13 +37,6 @@ void join(char ring[], node *n)
     // printf("after: %s\n", after);
     if (strcmp(after, "\0") == 0) // caso em que não há ainda nós no anel
     {
-        REG(ring, answer, n);
-        if (strcmp(answer, "OKREG") != 0)
-        {
-            printf("Erro no registo do nó no anel");
-            exit(1);
-        }
-
         strcpy(n->succ, n->self);
         strcpy(n->succ_IP, n->self_IP);
         strcpy(n->succ_TCP, n->self_TCP);
@@ -51,6 +44,12 @@ void join(char ring[], node *n)
         strcpy(n->succ_two, n->self);
         strcpy(n->succ_two_IP, n->self_IP);
         strcpy(n->succ_two_TCP, n->self_TCP);
+        REG(n->ring, answer, n);
+        if (strcmp(answer, "OKREG") != 0)
+        {
+            printf("Erro no registo do nó no anel");
+            exit(1);
+        }
         n->ring_bool = 1;
     }
     else
@@ -101,21 +100,21 @@ void join(char ring[], node *n)
         }
 
         // ENTRY para o sucessor
+        i = 1; //para o caso de o 1º nó ter saído abruptamente;
         fd = ENTRY(connectIP, connectTCP, n);
+        while(fd == -1){
+            strcpy(connectid, list[i].id);
+            strcpy(connectIP, list[i].IP);
+            strcpy(connectTCP, list[i].TCP);
+            i++;
+            fd = ENTRY(connectIP, connectTCP, n);
+        }
         // fprintf(stdout,"A fd que criei é: %d\n", fd);
         // sucessor
         strcpy(n->succ, connectid);
         strcpy(n->succ_IP, connectIP);
         strcpy(n->succ_TCP, connectTCP);
         n->succ_fd = fd;
-        // registar servidor de nós
-        REG(ring, answer, n); // só devia fazer isto se o resto der certo?
-        if (strcmp(answer, "OKREG") != 0)
-        {
-            printf("Erro no registo do nó no anel");
-            exit(1);
-        }
-        n->ring_bool = 1;
     }
     initialize_tables(n);
 }

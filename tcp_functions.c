@@ -15,7 +15,7 @@ int TCP_Client(char connectIP[], char connectTCP[], char mensagem[], int sock_cr
     if (fd == -1)
     {
       printf("Erro na criação da ligação TCP");
-      exit(1);
+      return -1;
     }
     memset(&hints, 0, sizeof hints);
     hints.ai_family = AF_INET;       // IPv4
@@ -24,14 +24,16 @@ int TCP_Client(char connectIP[], char connectTCP[], char mensagem[], int sock_cr
     if (errcode != 0)
     {
       printf("Erro errcode"); 
-      exit(1);
+      close(fd);
+      return -1;
     }
 
     n = connect(fd, res->ai_addr, res->ai_addrlen);
     if (n == -1)
     {
       printf("Erro no connect\n"); 
-      exit(1);
+      close(fd);
+      return -1;
     }
   }
 
