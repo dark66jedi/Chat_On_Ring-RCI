@@ -311,7 +311,7 @@ void CHAT_Received(node *node, char origin[], char dest[], char message[])
 {
   if (strcmp(node->self, dest) == 0)
   {
-    fprintf(stdout, "\nRecebi uma mensagem: %s\n", message);
+    fprintf(stdout, "\nRecebi uma mensagem do nó %s: %s\n", origin, message);
   }
   else
   {

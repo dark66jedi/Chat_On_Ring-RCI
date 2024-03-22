@@ -187,9 +187,15 @@ void chord(node *n)
             }
         }
         i = 0;
-        while (strcmp(list[i].id, n->self) == 0 || strcmp(list[i].id, n->pred) == 0 || strcmp(list[i].id, n->succ) == 0)
-        {
-            i++;
+
+        //Duarte, not sure
+        for(size_t i=0; i < MAX_N_NODES; i++){
+            for(size_t j=0; j < MAX_N_NODES; j++){
+                while (strcmp(list[i].id, n->self) == 0 || strcmp(list[i].id, n->pred) == 0 || strcmp(list[i].id, n->succ) == 0 || strcmp(list[i].id, n->chord_rec[j]) == 0){
+                    continue;
+                }
+                break;
+            }
         }
         strcpy(n->chord, list[i].id);
         strcpy(n->chord_IP, list[i].IP);

@@ -8,6 +8,7 @@ void impl_select(node *node)
   fd_set rfds;
   struct addrinfo hints, *res;
   int maxfd = 0, newfd = 0, fd = 0;
+  int one = 1;
   int errcode_listen_tcp, errcode_pred_tcp, errcode_succ_tcp, errcode_chord_tcp;
   struct sockaddr addr;
   socklen_t addrlen;
@@ -23,8 +24,13 @@ void impl_select(node *node)
   /* socket de escuta tcp (receber informação de nós fora do ring)*/
   if ((fd = socket(AF_INET, SOCK_STREAM, 0)) == -1)
   {
-    printf("Erro na criação da socket tcp\n");
+    printf("Erro na criação da socket tcp. Confirme os portos a serem utilizados e reinicie a aplicação.\n");
     perror("fd");
+    exit(0);
+  }
+  if(setsockopt(fd,SOL_SOCKET,SO_REUSEPORT,&one,sizeof(one))){
+    perror("setsockopt");
+    printf("Erro na reutilização da socket tcp. Confirme os portos a serem utilizados e reinicie a aplicação.\n");
     exit(0);
   }
   memset(&hints, 0, sizeof hints);
@@ -33,19 +39,19 @@ void impl_select(node *node)
   hints.ai_flags = AI_PASSIVE;
   if ((errcode_listen_tcp = getaddrinfo(NULL, TCP_global, &hints, &res)) != 0)
   {
-    printf("Erro getaddrinfo tcp");
+    printf("Erro getaddrinfo tcp\n");
     perror("errcode_listen_tcp");
     exit(1);
   }
   if (bind(fd, res->ai_addr, res->ai_addrlen) == -1)
   {
-    printf("Erro bind tcp escuta");
-    exit(1);
+    printf("Erro bind tcp escuta. onfirme os portos a serem utilizados e reinicie a aplicação.\n");
+    exit(0);
   }
   if (listen(fd, 5) == -1)
   {
-    printf("Erro listen tcp");
-    exit(1);
+    printf("Erro listen tcp\n");
+    exit(0);
   }
   while (1)
   { // ACTUALLY select
@@ -79,7 +85,7 @@ void impl_select(node *node)
     counter = select(maxfd + 1, &rfds, (fd_set *)NULL, (fd_set *)NULL, &timeout);
     if (counter == -1)
     {
-      perror("Erro ao abrir o arquivo");
+      perror("Erro ao abrir o arquivo\n");
     }
 
     // o que acontece com há timeout
@@ -118,11 +124,18 @@ void impl_select(node *node)
             if (strcmp(node->ring, "\0") != 0)
               leave(node);
           }
-          close(node->pred_fd);
+          close(node->pred_fd); 
           close(node->succ_fd);
           if (node->chord_bool == 1)
           {
             close(node->chord_fd);
+          }
+          for(size_t i=0; i < MAX_N_NODES; i++){
+            if (node->chord_rec[i] > 0){
+              close(node->chord_rec[i]);
+            } else{
+              i++;
+            }
           }
           fprintf(stdout, "\nO nó %s saiu do anel.\n", node->self);
           clean_node(node);
@@ -137,7 +150,7 @@ void impl_select(node *node)
           {
             leave(node);
           }
-          fprintf(stdout, "O nó %s saiu do anel.", node->self);
+          fprintf(stdout, "\nO nó %s saiu do anel.\n", node->self);
           clean_node(node);
           FD_ZERO(&rfds);
           freeaddrinfo(res);
@@ -162,12 +175,19 @@ void impl_select(node *node)
           {
             close(node->chord_fd);
           }
+          for(size_t i=0; i < MAX_N_NODES; i++){
+            if (node->chord_rec[i] > 0){
+              close(node->chord_rec[i]);
+            } else{
+              i++;
+            }
+          }
           close(fd);
           close(2);
           close(1);
           close(0);
           free(node);
-          fprintf(stdout, "Saída da aplicação com sucesso.");
+          fprintf(stdout, "\nSaída da aplicação com sucesso.\n");
           exit(0);
         }
         else if ((node->succ == node->pred) && (node->self == node->pred))
@@ -184,7 +204,7 @@ void impl_select(node *node)
           close(1);
           close(0);
           free(node);
-          fprintf(stdout, "Saída da aplicação com sucesso.");
+          fprintf(stdout, "\nSaída da aplicação com sucesso.");
           exit(0);
         }
       }
@@ -340,7 +360,7 @@ void impl_select(node *node)
         {
           if (n == -1)
           {
-            printf("Erro no n");
+            printf("\nErro de leitura.\n");
             exit(1);
           }
           else
@@ -384,7 +404,7 @@ void impl_select(node *node)
       {
         if (n == -1)
         {
-          printf("Erro no n");
+          printf("\nErro na leitura da mensagem da corda.\n");
           exit(1);
         }
         // identificar o protocolo recebido
@@ -464,6 +484,7 @@ void choose_terminal_cmd(node *node, char readInter[])
     strcpy(node->self_IP, IP_global);
     strcpy(node->self_TCP, TCP_global);
     join(ring, node);
+    fprintf(stdout, "\nO nó %s entrou no anel %s\n", id, ring);
   }
 
   // Comando direct join
@@ -491,6 +512,7 @@ void choose_terminal_cmd(node *node, char readInter[])
       strcpy(node->self_IP, IP_global);
       strcpy(node->self_TCP, TCP_global);
       direct_join(ring, node, buffer);
+      fprintf(stdout, "\nO nó %s conectou-se ao nó %s\n", id, succid);
     }
     else
     {
@@ -514,6 +536,7 @@ void choose_terminal_cmd(node *node, char readInter[])
     else
     {
       chord(node);
+      fprintf(stdout, "\nO nó %s criou uma corda com o nó %s\n", node->self, node->chord);
     }
   }
 
@@ -529,6 +552,7 @@ void choose_terminal_cmd(node *node, char readInter[])
         return;
       }
       remove_chord(node);
+      fprintf(stdout, "\nO nó %s removeu a sua corda com o nó %s\n", node->self, node->chord);
     }
     else
     {
@@ -621,7 +645,7 @@ void choose_terminal_cmd(node *node, char readInter[])
     char *after = DeleteMethod_space(readInter);
     after = DeleteMethod_space(after);
     strcpy(mensagem, after);
-    printf("mensagem:%s\n", mensagem);
+    fprintf(stdout, "\nO nó %s começou o envio da mensagem '%s' para o nó %s\n", node->self, mensagem, dest);
     message(node, dest, mensagem);
   }
   else
@@ -665,6 +689,7 @@ void choose_received_protocol(node *node, char buffer[], int fd)
     {
       sscanf(after, "%s %s", protocol, aux_id);
       CHORD_Received(aux_id, node, fd);
+      fprintf(stdout, "\nO nó %s criou uma corda comigo.\n", aux_id);
     }
     else if (strcmp(protocol, "ROUTE") == 0)
     {
