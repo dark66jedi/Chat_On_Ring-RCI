@@ -2,12 +2,15 @@
 
 char *UDP_Client(char regIP[], char regUDP[], char mensagem[])
 {
-    int fd, errcode;
+    fd_set rfds;
+    int fd = 0, maxfd, errcode;
     ssize_t n;
     socklen_t addrlen;
     struct addrinfo hints, *res;
     struct sockaddr_in addr;
+    struct timeval timeout;
     static char buffer[128];
+    int counter = 0;
 
     fd = socket(AF_INET, SOCK_DGRAM, 0); // UDP socket
     if (fd == -1)                        /*error*/
@@ -20,13 +23,37 @@ char *UDP_Client(char regIP[], char regUDP[], char mensagem[])
     memset(buffer, '\0', 128);
     if (errcode != 0) /*error*/
         exit(1);
-    n = sendto(fd, mensagem, strlen(mensagem), 0, res->ai_addr, res->ai_addrlen);
-    if (n == -1) /*error*/
-        exit(1);
-    addrlen = sizeof(addr);
-    n = recvfrom(fd, buffer, 128, 0, (struct sockaddr *)&addr, &addrlen);
-    if (n == -1) /*error*/
-        exit(1);
+
+    while (1)
+    { // ACTUALLY select
+        FD_ZERO(&rfds);
+        FD_SET(fd, &rfds);
+        maxfd = fd;
+
+        timeout.tv_sec = 2;
+        timeout.tv_usec = 0;
+
+        n = sendto(fd, mensagem, strlen(mensagem), 0, res->ai_addr, res->ai_addrlen);
+        if (n == -1) /*error*/
+            exit(1);
+
+        counter = select(maxfd + 1, &rfds, (fd_set *)NULL, (fd_set *)NULL, &timeout);
+
+        if (counter == 0)
+        {
+            printf("\n\nDEU CONTINUE\n\n");
+            continue;
+        }
+        
+        if (FD_ISSET(fd, &rfds))
+        {
+            addrlen = sizeof(addr);
+            n = recvfrom(fd, buffer, 128, 0, (struct sockaddr *)&addr, &addrlen);
+            if (n == -1) /*error*/
+                exit(1);
+            break;
+        }
+    }
     // write(1, buffer, n);
     freeaddrinfo(res);
     close(fd);

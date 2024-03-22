@@ -19,15 +19,9 @@ void NODES(char ring[], char answer[])
 
 void REG(char ring[], char answer[], node *node)
 {
-    char msg_to_send[50] = "REG ";
+    char msg_to_send[100];
 
-    strcat(msg_to_send, ring);
-    strcat(msg_to_send, " ");
-    strcat(msg_to_send, node->self); // id
-    strcat(msg_to_send, " ");
-    strcat(msg_to_send, node->self_IP);
-    strcat(msg_to_send, " ");
-    strcat(msg_to_send, node->self_TCP);
+    sprintf(msg_to_send, "REG %s %s %s %s", ring, node->self, node->self_IP, node->self_TCP);
     strcpy(answer, UDP_Client(regIP, regUDP, msg_to_send));
 }
 
