@@ -41,7 +41,6 @@ char *UDP_Client(char regIP[], char regUDP[], char mensagem[])
 
         if (counter == 0)
         {
-            printf("\n\nDEU CONTINUE\n\n");
             continue;
         }
         

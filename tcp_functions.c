@@ -39,7 +39,7 @@ int TCP_Client(char connectIP[], char connectTCP[], char mensagem[], int sock_cr
 
   ptr = strcpy(buffer, mensagem);
   nbytes = strlen(mensagem);
-  nleft = nbytes; //Confirmar isto para não enviar o \0 -> Não, quando envias uma mensagem, não é para enviares um '\0' no final (ou seja, write(fd, "PRED 00\n", 8) está certo e write(fd, "PRED 00\n", 9) está errado)
+  nleft = nbytes; 
   while (nleft > 0)
   {
     nwritten = write(fd, ptr, nleft);

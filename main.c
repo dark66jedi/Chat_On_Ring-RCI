@@ -39,7 +39,7 @@ int main(int argc, char *argv[])
     {
       strcpy(IP_global, argv[1]);
       strcpy(TCP_global, argv[2]);
-      strcpy(regIP, "tejo.tecnico.ulisboa.pt"); //193.136.138.142
+      strcpy(regIP, "193.136.138.142"); 
       strcpy(regUDP, "59000");
     }
 
@@ -53,12 +53,12 @@ int main(int argc, char *argv[])
   }
   else
   {
-    printf("Erro na inicialização do programa\n"); // ADICIONAR sugestões de correção
-    printf("O programa deverá ser inicializado com: COR IP TCP regIP regUDP\n");
-    printf("IP é o endereço da máquina que aloja a aplicação\n");
-    printf("TCP é o porto TCP servidor da aplicação\n");
-    printf("regIP é o endereço do servidor de nós\n");
-    printf("regTCP é o porto TCP do servidor de nós\n");
+    printf(" \n=== Erro na inicialização do programa === \n"); 
+    printf("\n \u2022 O programa deverá ser inicializado com: COR IP TCP regIP regUDP\n");
+    printf("\n \u2022 IP é o endereço da máquina que aloja a aplicação\n");
+    printf("\n \u2022 TCP é o porto TCP servidor da aplicação\n");
+    printf("\n \u2022 regIP é o endereço do servidor de nós\n");
+    printf("\n \u2022 regTCP é o porto TCP do servidor de nós \n");
   }
-  return 0; //FAZER QUESTÃO DE SE ESCREVEREM MAL, VOLTAR
+  return 0; 
 }

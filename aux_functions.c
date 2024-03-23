@@ -2,7 +2,6 @@
 
 void Interface(node *node)
 {
-  // falta adicionar outras coisas
   fprintf(stdout, "\nLista de comandos:\n");
   if (node->ring_bool == 0)
   {
@@ -11,7 +10,6 @@ void Interface(node *node)
   }
   else if (node->ring_bool == 1)
   {
-    fprintf(stdout, "\n \u2022 2ª interface");
     if (node->chord_bool == 0)
     {
       fprintf(stdout, "\n \u2022 chord (c) - Estabelecimento de uma corda com outro nó");
@@ -20,13 +18,12 @@ void Interface(node *node)
     {
       fprintf(stdout, "\n \u2022 remove chord (rc) - Eliminação da corda");
     }
-   //só para não aparecer uma mancha tão grande no código enquanto testo
-    /*fprintf(stdout, "\n \u2022 show topology (st) - Mostra o estado do protocolo topológico");
+    fprintf(stdout, "\n \u2022 show topology (st) - Mostra o estado do protocolo topológico");
     fprintf(stdout, "\n \u2022 show routing (sr) dest - Mostra a entrada da tabela de encaminhamento para o nó dest");
     fprintf(stdout, "\n \u2022 show path (sp) dest - Mostra o caminho mais curto para o nó dest");
     fprintf(stdout, "\n \u2022 show forwarding (sf) - Mostra a tabela de expedição do próprio nó");
     fprintf(stdout, "\n \u2022 message (m) dest message - Envio da mensagem message para o nó dest");
-    fprintf(stdout, "\n \u2022 leave (l) - Saída do nó do anel");*/
+    fprintf(stdout, "\n \u2022 leave (l) - Saída do nó do anel");
   }
 
   fprintf(stdout, "\n \u2022 exit (x) - Fecho do programa");
@@ -49,22 +46,27 @@ char *DeleteMethod_space(char *string)
       return p + 1;
 }
 
-char *find_next_protocol(char *buffer) {
-    char *newline_ptr = strchr(buffer, '\n');
-    if (newline_ptr != NULL) {
-        *newline_ptr = '\0';  // Replace newline with null terminator
-        return newline_ptr + 1;  // Return pointer to the next message
-    } else {
-        return NULL;  // No more messages found
-    }
+char *find_next_protocol(char *buffer)
+{
+  char *newline_ptr = strchr(buffer, '\n');
+  if (newline_ptr != NULL)
+  {
+    *newline_ptr = '\0';    // Replace newline with null terminator
+    return newline_ptr + 1; // Return pointer to the next message
+  }
+  else
+  {
+    return NULL; // No more messages found
+  }
 }
 
-void clean_node(node *node){
+void clean_node(node *node)
+{
   node->ring[0] = '\0';
-  node->self[0] = '\0' ;      
-  node->self_IP[0] = '\0';  
-  node->self_TCP[0] = '\0'; 
-  strcpy(node->pred,"");
+  node->self[0] = '\0';
+  node->self_IP[0] = '\0';
+  node->self_TCP[0] = '\0';
+  strcpy(node->pred, "");
   node->succ[0] = '\0';
   node->succ_IP[0] = '\0';
   node->succ_TCP[0] = '\0';
@@ -76,36 +78,37 @@ void clean_node(node *node){
   node->chord_TCP[0] = '\0';
   node->pred_left_bool = 0;
   node->ring_bool = 0;
-  node->chord_bool = 0;                                    
+  node->chord_bool = 0;
   node->pred_fd = -1;
   node->succ_fd = -1;
   node->chord_fd = -1;
 }
 
-
 int max(int x, int y, int z, int j, int lista[])
 {
-    int highest = x;
+  int highest = x;
 
-    if (y > highest) {
-        highest = y;
-    }
-    if (z > highest) {
-        highest = z;
-    }
-    if (j > highest) {
-        highest = j;
-    }
-    for (size_t i = 0; i < MAX_N_NODES; i++)
+  if (y > highest)
+  {
+    highest = y;
+  }
+  if (z > highest)
+  {
+    highest = z;
+  }
+  if (j > highest)
+  {
+    highest = j;
+  }
+  for (size_t i = 0; i < MAX_N_NODES; i++)
+  {
+    if (lista[i] > highest)
     {
-      if (lista[i] > highest)
-      {
-        highest = lista[i];
-      }
-      
+      highest = lista[i];
     }
-    
-    return highest;
+  }
+
+  return highest;
 }
 
 void search_index(node *node, char node_id[], int *index)
@@ -113,7 +116,7 @@ void search_index(node *node, char node_id[], int *index)
   *index = -1;
   for (size_t i = 0; i < MAX_N_NODES; i++)
   {
-    if(strcmp(node_id, node->table_indexes[i]) == 0)
+    if (strcmp(node_id, node->table_indexes[i]) == 0)
     {
       *index = i;
       return;
@@ -126,7 +129,7 @@ void search_fd(node *node, int fd, int *index)
   *index = -1;
   for (size_t i = 0; i < MAX_N_NODES; i++)
   {
-    if(fd == node->chord_rec[i])
+    if (fd == node->chord_rec[i])
     {
       *index = i;
       return;
@@ -140,7 +143,7 @@ void check_for_new_node(node *node, char path[])
   int i = 0, path_i = 0;
   int index;
 
-  while(path_i < strlen(path))
+  while (path_i < strlen(path))
   {
     i = 0;
     node_to_check[i] = path[path_i];
@@ -152,14 +155,15 @@ void check_for_new_node(node *node, char path[])
 
     search_index(node, node_to_check, &index);
 
-    if (index == -1)                        // novo nó no anel
+    if (index == -1) // novo nó no anel
     {
       strcpy(node->table_indexes[node->filling_table_index], node_to_check);
       node->filling_table_index = node->filling_table_index + 1;
     }
 
-    if (path_i>(strlen(path)-3)) break;
-  
+    if (path_i > (strlen(path) - 3))
+      break;
+
     path_i++;
   }
 }
@@ -171,7 +175,7 @@ void check_for_self_in_path(node *node, char path[], int *is_in_path)
   int index;
 
   *is_in_path = 0;
-  while(path_i < strlen(path))
+  while (path_i < strlen(path))
   {
     i = 0;
     node_to_check[i] = path[path_i];
@@ -187,60 +191,56 @@ void check_for_self_in_path(node *node, char path[], int *is_in_path)
       return;
     }
 
-    if (path_i>(strlen(path)-3)) break;
-  
+    if (path_i > (strlen(path) - 3))
+      break;
+
     path_i++;
   }
 }
 
 void initialize_tables(node *node)
 {
-    int i, k;
-    char buffer[50];
+  int i, k;
+  char buffer[50];
 
-    for (i = 0; i < MAX_N_NODES; i++)
+  for (i = 0; i < MAX_N_NODES; i++)
+  {
+    for (k = 0; k < MAX_N_NODES; k++)
     {
-        for (k = 0; k < MAX_N_NODES; k++)
-        {
-          strcpy(node->routing_table[i][k], "-");
-        }
-        node->chord_rec[i] = -1;
-        strcpy(node->table_indexes[i], "--");
+      strcpy(node->routing_table[i][k], "-");
     }
+    node->chord_rec[i] = -1;
+    strcpy(node->table_indexes[i], "--");
+  }
 
-    // registra-se a ele próprio no table_indexes
-    node->filling_table_index = 0;
-    strcpy(node->table_indexes[node->filling_table_index], node->self);
-    strcpy(node->routing_table[node->filling_table_index][node->filling_table_index], node->self);
+  // registra-se a ele próprio no table_indexes
+  node->filling_table_index = 0;
+  strcpy(node->table_indexes[node->filling_table_index], node->self);
+  strcpy(node->routing_table[node->filling_table_index][node->filling_table_index], node->self);
+  node->filling_table_index = node->filling_table_index + 1;
+
+  if ((strcmp(node->succ, node->self) != 0)) 
+  {
+    strcpy(node->table_indexes[node->filling_table_index], node->succ);
+    sprintf(buffer, "%s-%s", node->self, node->succ);
+    strcpy(node->routing_table[node->filling_table_index][node->filling_table_index], buffer);
     node->filling_table_index = node->filling_table_index + 1;
-
-    if ((strcmp(node->succ, node->self) != 0)) //não for o 1º nó
-    {
-      strcpy(node->table_indexes[node->filling_table_index], node->succ);
-      sprintf(buffer, "%s-%s", node->self, node->succ);
-      strcpy(node->routing_table[node->filling_table_index][node->filling_table_index], buffer);
-      node->filling_table_index = node->filling_table_index + 1;
-    }
-    if ((strcmp(node->pred, node->self) != 0) && (strcmp(node->pred, "") != 0)) //não for o 1º nó e não tiver pred?
-    {
-      strcpy(node->table_indexes[node->filling_table_index], node->pred);
-      sprintf(buffer, "%s-%s", node->self, node->pred);
-      strcpy(node->routing_table[node->filling_table_index][node->filling_table_index], buffer);
-      node->filling_table_index = node->filling_table_index + 1;
-    }
-    update_tables(node);
-    printf("\n\n»»»»»»»»»»»»»»»»»»»»»»»»»»»»»»»»»»»»»»»»»»»»»»»»»»»»»\n\n");
-    printf("Caminho para mim %s: %s\n", node->self, node->routing_table[0][0]);
-    printf("Caminho para succ %s: %s\n", node->succ, node->routing_table[1][1]);
-    printf("Caminho para pred %s: %s\n", node->pred, node->routing_table[2][2]);
-    printf("\n«««««««««««««««««««««««««««««««««««««««««««««««««««««\n\n");
+  }
+  if ((strcmp(node->pred, node->self) != 0) && (strcmp(node->pred, "") != 0)) 
+  {
+    strcpy(node->table_indexes[node->filling_table_index], node->pred);
+    sprintf(buffer, "%s-%s", node->self, node->pred);
+    strcpy(node->routing_table[node->filling_table_index][node->filling_table_index], buffer);
+    node->filling_table_index = node->filling_table_index + 1;
+  }
+  update_tables(node);
 }
 
 void update_neighbour(node *node, char old_neighbour[], char new_neighbour[])
 {
   int old_neighbour_index, new_neighbour_index;
 
-  if(old_neighbour != NULL)
+  if (old_neighbour != NULL)
   {
     search_index(node, old_neighbour, &old_neighbour_index);
 
@@ -252,7 +252,7 @@ void update_neighbour(node *node, char old_neighbour[], char new_neighbour[])
       }
     }
   }
-  if(new_neighbour != NULL)
+  if (new_neighbour != NULL)
   {
     search_index(node, new_neighbour, &new_neighbour_index);
     if (new_neighbour_index == -1)
@@ -274,7 +274,8 @@ void update_tables(node *node)
     strcpy(short_path, "-");
     for (size_t k = 0; k < MAX_N_NODES; k++)
     {
-      if(strcmp(node->routing_table[i][k], "-") == 0) continue;
+      if (strcmp(node->routing_table[i][k], "-") == 0)
+        continue;
       else
       {
         if (strlen(short_path) > strlen(node->routing_table[i][k]) || strcmp(short_path, "-") == 0)
@@ -290,13 +291,13 @@ void update_tables(node *node)
 
   for (size_t i = 0; i < MAX_N_NODES; i++)
   {
-    if(strcmp(node->expedition_table[i], "-") == 0) continue;
+    if (strcmp(node->expedition_table[i], "-") == 0)
+      continue;
     else
     {
       node->expedition_table[i][0] = node->short_paths_table[i][3];
       node->expedition_table[i][1] = node->short_paths_table[i][4];
       node->expedition_table[i][2] = '\0';
     }
-  }  
+  }
 }
-

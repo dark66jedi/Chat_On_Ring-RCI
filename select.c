@@ -12,7 +12,6 @@ void impl_select(node *node)
   int errcode_listen_tcp, errcode_pred_tcp, errcode_succ_tcp, errcode_chord_tcp;
   struct sockaddr addr;
   socklen_t addrlen;
-  struct timeval timeout;
   int counter = 0, nread = 0, n = 0;
   int lixo = 0;
   char buffer[500];
@@ -24,13 +23,14 @@ void impl_select(node *node)
   /* socket de escuta tcp (receber informação de nós fora do ring)*/
   if ((fd = socket(AF_INET, SOCK_STREAM, 0)) == -1)
   {
-    printf("Erro na criação da socket tcp. Confirme os portos a serem utilizados e reinicie a aplicação.\n");
+    printf("\nErro na criação da socket tcp. Confirme os portos a serem utilizados e reinicie a aplicação.\n");
     perror("fd");
     exit(0);
   }
-  if(setsockopt(fd,SOL_SOCKET,SO_REUSEPORT,&one,sizeof(one))){
+  if (setsockopt(fd, SOL_SOCKET, SO_REUSEPORT, &one, sizeof(one)))
+  {
     perror("setsockopt");
-    printf("Erro na reutilização da socket tcp. Confirme os portos a serem utilizados e reinicie a aplicação.\n");
+    printf("\nErro na reutilização da socket tcp. Confirme os portos a serem utilizados e reinicie a aplicação.\n");
     exit(0);
   }
   memset(&hints, 0, sizeof hints);
@@ -39,29 +39,29 @@ void impl_select(node *node)
   hints.ai_flags = AI_PASSIVE;
   if ((errcode_listen_tcp = getaddrinfo(NULL, TCP_global, &hints, &res)) != 0)
   {
-    printf("Erro getaddrinfo tcp\n");
+    printf("\nErro getaddrinfo tcp\n");
     perror("errcode_listen_tcp");
     exit(1);
   }
   if (bind(fd, res->ai_addr, res->ai_addrlen) == -1)
   {
-    printf("Erro bind tcp escuta. onfirme os portos a serem utilizados e reinicie a aplicação.\n");
+    printf("\nErro bind tcp escuta. Confirme os portos a serem utilizados e reinicie a aplicação.\n");
     exit(0);
   }
   if (listen(fd, 5) == -1)
   {
-    printf("Erro listen tcp\n");
+    printf("\nErro listen tcp\n");
     exit(0);
   }
   while (1)
-  { // ACTUALLY select
+  { 
     FD_ZERO(&rfds);
     FD_SET(0, &rfds);
     FD_SET(fd, &rfds);
     maxfd = max(fd, node->pred_fd, node->succ_fd, node->chord_fd, node->chord_rec);
     if (node->pred_fd > 0)
     {
-      FD_SET(node->pred_fd, &rfds); // só se pode dar set se existir
+      FD_SET(node->pred_fd, &rfds); 
     }
     if (node->succ_fd > 0)
     {
@@ -79,19 +79,10 @@ void impl_select(node *node)
       }
     }
 
-    timeout.tv_sec = 2;
-    timeout.tv_usec = 0;
-
-    counter = select(maxfd + 1, &rfds, (fd_set *)NULL, (fd_set *)NULL, &timeout);
+    counter = select(maxfd + 1, &rfds, (fd_set *)NULL, (fd_set *)NULL, (struct timeval *)NULL);
     if (counter == -1)
     {
-      perror("Erro ao abrir o arquivo\n");
-    }
-
-    // o que acontece com há timeout
-    if (counter == 0)
-    {
-      /* code */
+      perror("\nErro ao abrir o arquivo do select.\n");
     }
 
     /* fd responsável pelo terminal****************************************/
@@ -109,7 +100,7 @@ void impl_select(node *node)
           }
           else
           {
-            fprintf(stdout, "Comando inválido. O nó ainda não faz parte de um anel. Por favor, escolha um comando válido. \n");
+            fprintf(stdout, "\nComando inválido. O nó ainda não faz parte de um anel. Por favor, escolha um comando válido. \n");
             Interface(node);
             fgets(readInter, sizeof(readInter), stdin);
             sscanf(readInter, "%s", modo);
@@ -124,16 +115,20 @@ void impl_select(node *node)
             if (strcmp(node->ring, "\0") != 0)
               leave(node);
           }
-          close(node->pred_fd); 
+          close(node->pred_fd);
           close(node->succ_fd);
           if (node->chord_bool == 1)
           {
             close(node->chord_fd);
           }
-          for(size_t i=0; i < MAX_N_NODES; i++){
-            if (node->chord_rec[i] > 0){
+          for (size_t i = 0; i < MAX_N_NODES; i++)
+          {
+            if (node->chord_rec[i] > 0)
+            {
               close(node->chord_rec[i]);
-            } else{
+            }
+            else
+            {
               i++;
             }
           }
@@ -175,10 +170,14 @@ void impl_select(node *node)
           {
             close(node->chord_fd);
           }
-          for(size_t i=0; i < MAX_N_NODES; i++){
-            if (node->chord_rec[i] > 0){
+          for (size_t i = 0; i < MAX_N_NODES; i++)
+          {
+            if (node->chord_rec[i] > 0)
+            {
               close(node->chord_rec[i]);
-            } else{
+            }
+            else
+            {
               i++;
             }
           }
@@ -204,7 +203,7 @@ void impl_select(node *node)
           close(1);
           close(0);
           free(node);
-          fprintf(stdout, "\nSaída da aplicação com sucesso.");
+          fprintf(stdout, "\nSaída da aplicação com sucesso. \n");
           exit(0);
         }
       }
@@ -225,7 +224,7 @@ void impl_select(node *node)
       {
         if (n == -1)
         {
-          printf("Erro no n");
+          printf("\nErro na leitura do sucessor.\n");
           exit(1);
         }
         else
@@ -237,6 +236,7 @@ void impl_select(node *node)
       }
       if (n == 0)
       {
+        int succ_leave_idx;
         if (strcmp(node->self, node->succ_two) == 0)
         {
           // caso 2 nós, 1 vai sair e vai ficar só 1
@@ -256,6 +256,8 @@ void impl_select(node *node)
           node->chord_fd = -1;
           // atualizar tabelas
           update_neighbour(node, node->node_left, node->succ);
+          search_index(node, node->node_left, &succ_leave_idx);
+          strcpy(node->table_indexes[succ_leave_idx], "--");
         }
         else if (strcmp(node->self, node->succ_two) != 0 && strcmp(node->pred, node->succ_two) == 0)
         {
@@ -271,6 +273,8 @@ void impl_select(node *node)
 
           // atualizar tabelas
           update_neighbour(node, node->node_left, node->succ);
+          search_index(node, node->node_left, &succ_leave_idx);
+          strcpy(node->table_indexes[succ_leave_idx], "--");
           // enviar route
           ROUTE(node, node->pred, node->pred_fd);
           ROUTE(node, node->succ, node->succ_fd);
@@ -287,6 +291,8 @@ void impl_select(node *node)
 
           // atualizar tabelas
           update_neighbour(node, node->node_left, node->succ);
+          search_index(node, node->node_left, &succ_leave_idx);
+          strcpy(node->table_indexes[succ_leave_idx], "--");
           // enviar route
           ROUTE(node, node->pred, node->pred_fd);
           ROUTE(node, node->succ, node->succ_fd);
@@ -317,7 +323,7 @@ void impl_select(node *node)
       {
         if (n == -1)
         {
-          printf("Erro no n");
+          printf("\nErro na leitura do precedor\n");
           exit(1);
         }
         else
@@ -329,6 +335,7 @@ void impl_select(node *node)
       }
       if (n == 0)
       {
+        int pred_leave_idx;
         if (strcmp(node->self, node->succ_two) == 0)
         { // caso em que estão 2 nós e o outro sai
           strcpy(node->node_left, node->pred);
@@ -336,14 +343,18 @@ void impl_select(node *node)
           close(node->pred_fd);
           node->pred_fd = -1;
           update_neighbour(node, node->node_left, node->pred);
+          search_index(node, node->node_left, &pred_leave_idx);
+          strcpy(node->table_indexes[pred_leave_idx], "--");
         }
-        else // possivelmente a pagar
+        else 
         {
           strcpy(node->node_left, node->pred);
           node->pred_left_bool = 1;
           close(node->pred_fd);
           node->pred_fd = -1;
           update_neighbour(node, node->node_left, node->pred);
+          search_index(node, node->node_left, &pred_leave_idx);
+          strcpy(node->table_indexes[pred_leave_idx], "--");
         }
       }
     }
@@ -360,7 +371,7 @@ void impl_select(node *node)
         {
           if (n == -1)
           {
-            printf("\nErro de leitura.\n");
+            printf("\nErro de leitura nas cordas.\n");
             exit(1);
           }
           else
@@ -428,7 +439,6 @@ void impl_select(node *node)
           }
         }
       }
-      // break;
     }
     /**********************************************************************/
 
@@ -440,14 +450,14 @@ void impl_select(node *node)
       addrlen = sizeof(addr);
       if ((newfd = accept(fd, &addr, &addrlen)) == -1)
       {
-        printf("Erro no accept");
+        printf("\nErro no accept\n");
         exit(1);
       }
       while ((n = read(newfd, buffer, 500)) != 0)
       {
         if (n == -1)
         {
-          printf("Erro no n");
+          printf("\nErro no n\n");
           exit(1);
         }
         // identificar o protocolo recebido
@@ -467,6 +477,7 @@ void choose_terminal_cmd(node *node, char readInter[])
   char id[3], dest[3];
   char succid[3], succIP[30], succTCP[10];
   char mensagem[128];
+  int node_presence_idx;
 
   sscanf(readInter, "%s", modo);
 
@@ -479,12 +490,23 @@ void choose_terminal_cmd(node *node, char readInter[])
       return;
     }
     sscanf(readInter, "%s %s %s", modo, ring, id);
+    if ((strlen(ring) != 3))
+    {
+      printf("\n=== Input de ring inválido. Por favor, escreva novamente o comando. ===\n");
+      return;
+    }
+    if ((strlen(id) != 2))
+    {
+      printf("\n=== Input de id inválido. Por favor, escreva novamente o comando. ===\n");
+      return;
+    }
+
     strcpy(node->ring, ring);
     strcpy(node->self, id);
     strcpy(node->self_IP, IP_global);
     strcpy(node->self_TCP, TCP_global);
     join(ring, node);
-    fprintf(stdout, "\nO nó %s entrou no anel %s\n", id, ring);
+    fprintf(stdout, "\n=== O nó %s entrou no anel %s ===\n", node->self, node->ring);
   }
 
   // Comando direct join
@@ -508,11 +530,32 @@ void choose_terminal_cmd(node *node, char readInter[])
         sscanf(readInter, "%s %s %s %s %s %s", modo, modo2, id, succid, succIP, succTCP);
         sprintf(buffer, "%s %s %s %s", id, succid, succIP, succTCP);
       }
+
+      if ((strlen(id) != 2))
+      {
+        printf("\n=== Input de id inválido. Por favor, escreva novamente o comando. ===\n");
+        return;
+      }
+      if ((strlen(succid) != 2))
+      {
+        printf("\n=== Input de id do sucessor inválido. Por favor, escreva novamente o comando. ===\n");
+        return;
+      }
+      if ((strlen(succIP) >= 6))
+      {
+        printf("\n=== Input de IP do sucessor inválido. Por favor, escreva novamente o comando. ===\n");
+        return;
+      }
+      if ((strlen(succTCP) >= 4))
+      {
+        printf("\n=== Input de porto do sucessor inválido. Por favor, escreva novamente o comando. ===\n");
+        return;
+      }
+
       strcpy(node->self, id);
       strcpy(node->self_IP, IP_global);
       strcpy(node->self_TCP, TCP_global);
       direct_join(ring, node, buffer);
-      fprintf(stdout, "\nO nó %s conectou-se ao nó %s\n", id, succid);
     }
     else
     {
@@ -531,12 +574,12 @@ void choose_terminal_cmd(node *node, char readInter[])
     }
     else if (strcmp(node->ring, "\0") == 0)
     {
-      fprintf(stdout, "O nó não tem conhecimento do anel a qual faz parte. Não poderá criar cordas");
+      fprintf(stdout, "\n === O nó não tem conhecimento do anel a qual faz parte. Não poderá criar cordas ===\n");
     }
     else
     {
       chord(node);
-      fprintf(stdout, "\nO nó %s criou uma corda com o nó %s\n", node->self, node->chord);
+      fprintf(stdout, "\n ===O nó %s criou uma corda com o nó %s ===\n", node->self, node->chord);
     }
   }
 
@@ -552,7 +595,7 @@ void choose_terminal_cmd(node *node, char readInter[])
         return;
       }
       remove_chord(node);
-      fprintf(stdout, "\nO nó %s removeu a sua corda com o nó %s\n", node->self, node->chord);
+      fprintf(stdout, "\n === O nó %s removeu a sua corda com o nó %s ===\n", node->self, node->chord);
     }
     else
     {
@@ -583,11 +626,37 @@ void choose_terminal_cmd(node *node, char readInter[])
     if ((strcmp(modo2, "path") == 0))
     {
       sscanf(readInter, "%s %s %s", modo, modo2, dest);
+      if ((strlen(dest) != 2))
+      {
+        printf("\n=== Input de destino inválido. Por favor, escreva novamente o comando. ===\n");
+        return;
+      }
+
+      search_index(node, dest, &node_presence_idx);
+      if (node_presence_idx == -1)
+      {
+        printf("\n=== Input de destino não existente. Por favor, escreva novamente o comando. ===\n");
+        return;
+      }
+
       show_routing(node, dest);
     }
     else if (strcmp(modo, "sr") == 0)
     {
       sscanf(readInter, "%s %s", modo, dest);
+      if ((strlen(dest) != 2))
+      {
+        printf("\n=== Input de destino inválido. Por favor, escreva novamente o comando. ===\n");
+        return;
+      }
+
+      search_index(node, dest, &node_presence_idx);
+      if (node_presence_idx == -1)
+      {
+        printf("\n=== Input de destino não existente. Por favor, escreva novamente o comando. ===\n");
+        return;
+      }
+
       show_routing(node, dest);
     }
     else
@@ -601,14 +670,41 @@ void choose_terminal_cmd(node *node, char readInter[])
   else if ((strcmp(modo, "show") == 0) || (strcmp(modo, "sp") == 0))
   {
     sscanf(readInter, "%s %s %s", modo, modo2, dest);
+    int node_presence_idx;
     if ((strcmp(modo2, "path") == 0))
     {
       sscanf(readInter, "%s %s %s", modo, modo2, dest);
+      if ((strlen(dest) != 2))
+      {
+        printf("\n=== Input de destino inválido. Por favor, escreva novamente o comando. ===\n");
+        return;
+      }
+
+      search_index(node, dest, &node_presence_idx);
+      if (node_presence_idx == -1)
+      {
+        printf("\n=== Input de destino não existente. Por favor, escreva novamente o comando. ===\n");
+        return;
+      }
+
       show_path(node, dest);
     }
     else if (strcmp(modo, "sp") == 0)
     {
       sscanf(readInter, "%s %s", modo, dest);
+      if ((strlen(dest) != 2))
+      {
+        printf("\n=== Input de destino inválido. Por favor, escreva novamente o comando. ===\n");
+        return;
+      }
+
+      search_index(node, dest, &node_presence_idx);
+      if (node_presence_idx == -1)
+      {
+        printf("\n=== Destino não existente. Por favor, escreva novamente o comando. ===\n");
+        return;
+      }
+
       show_path(node, dest);
     }
     else
@@ -645,6 +741,24 @@ void choose_terminal_cmd(node *node, char readInter[])
     char *after = DeleteMethod_space(readInter);
     after = DeleteMethod_space(after);
     strcpy(mensagem, after);
+    if ((strlen(dest) != 2))
+    {
+      printf("\n=== Input de destino inválido. Por favor, escreva novamente o comando. ===\n");
+      return;
+    }
+    if ((strlen(mensagem) > 0))
+    {
+      printf("\n=== Input de mensagem inválida. Por favor, escreva novamente o comando. ===\n");
+      return;
+    }
+
+    search_index(node, dest, &node_presence_idx);
+    if (node_presence_idx == -1)
+    {
+      printf("\n=== Destino não existente. Por favor, escreva novamente o comando. ===\n");
+      return;
+    }
+
     fprintf(stdout, "\nO nó %s começou o envio da mensagem '%s' para o nó %s\n", node->self, mensagem, dest);
     message(node, dest, mensagem);
   }
