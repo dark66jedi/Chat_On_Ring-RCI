@@ -1,14 +1,9 @@
 # ignore a file type
-*
+*.o
+COR
+ChatMaisCurtosAnelAutoAvaliacao_093.pdf
 
 # exceptions (using !) to the files to ignore
-!*.c
-!*.h
-!Makefile
-!.gitignore
-
-udp_server.c
-udp_client.c
 
 # editor directories
 .vscode
